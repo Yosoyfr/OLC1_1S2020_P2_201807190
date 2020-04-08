@@ -66,6 +66,7 @@ function run() {
   analisis_Lexico(value_Txt);
   console.log(Lista_de_Tokens);
   console.log(Lista_de_Errores);
+  parser();
 }
 
 //Proceso de analisis lexico
@@ -112,12 +113,6 @@ function analisis_Lexico(entrada) {
         // Revisara si puede ser una cadena
         else if (c === '"') {
           estado = 5;
-          i--;
-          columna--;
-        }
-        //Revisara si puede ser un caracter
-        else if (c === "'") {
-          estado = 18;
           i--;
           columna--;
         }
@@ -783,4 +778,225 @@ function addError(tipo, lexema, fila, columna) {
     Fila: fila,
     Columna: columna,
   });
+}
+
+//Proceso de analisis sintactico
+
+//Variable que se usa como indice para recorrer la lista de tokens
+var indice = 0;
+
+//Variable que representa el caracter de anticipacion que posee el parser para ralizar el analisis, en este caso se desarrollo un analizador LL1 (analizador predictivorecursivo), con solo un caracter(token) de anticipacion.
+var tokenActual;
+
+//Codigo de traduccion python
+var Codigo_Python = "";
+//Contador de Tabs
+var Contador_Tabs_Python = 0;
+
+//Lista de tokens que el parser recibe del analizador lexico
+var ListaVariablesGlobales = [];
+var Lista_Errores_Sintaticos = [];
+
+//Funcion del parser
+function parser() {
+  //Vamos a añadir un ultimo token para saber donde termina
+  addToken("Ultimo", "Ultimo", "0", "0");
+  //Reiniciamos las listas
+  ListaVariablesGlobales = [];
+  Lista_Errores_Sintaticos = [];
+  //Reiniamos todos los valores
+  indice = 0;
+  tokenActual = Lista_de_Tokens[indice];
+
+  //Llamada al no terminal inicial
+  I();
+}
+
+function I() {
+  //Inicio de un documento c#
+  //Puede que vengan comentarios
+  Comentarios();
+  //Vamos a hacer esto de forma que si viene una clase o no
+  let class_ = false;
+  if (tokenActual.Tipo == "Reservada class") {
+    emparejar("Reservada class");
+    emparejar("Identificador");
+    emparejar("Llave izquierda");
+    class_ = true;
+  }
+  //Cuerpo de las sentencias y codigos del documento c#
+  /*
+   * <Inicio> -> <Asignacion de Variables>
+   *          | <Ciclos>
+   *          | <
+   */
+  Inicio();
+
+  //Final de un documento c#
+  // si se encontro que venia una clase tiene que terminar de esta manera
+  if (class_) {
+    emparejar("Llave derecha");
+  } else {
+    console.log(
+      ">> Error sintactico se esperaba [" +
+        tip +
+        "] en lugar de [" +
+        tokenActual.Tipo +
+        ", " +
+        tokenActual.Lexema +
+        ", " +
+        tokenActual.Fila +
+        "]"
+    );
+    errorSintactico = true;
+    Error_Sintactico_Permiso = false;
+  }
+}
+
+// Metodo que sirve para leer los valores a las variables
+var valorVariable = "";
+var Variables_Python = [];
+
+function Inicio() {
+  asignacionVariables();
+  Condicionales();
+  Ciclos();
+  instruccionImprimir();
+}
+
+//Aqui es donde se le agrega un valor a la asignacion que se le hizo a la variable declarada o variables.
+function Asignacion_Expresion() {
+  valorVariable = "";
+  Expresiones();
+}
+
+//Comparacaion de mas expresiones
+function Expresiones() {
+  //Expresiones-> T EP
+  T();
+  EP();
+}
+
+function EP() {
+  //EP-> + T EP
+  //   | - T EP
+  //   | Epsilon
+  if (tokenActual.Tipo === "Signo mas") {
+    valorVariable += "+";
+    emparejar("Signo mas");
+    T();
+    EP();
+  } else if (tokenActual.Tipo === "Signo menos") {
+    valorVariable += "-";
+    emparejar("Signo menos");
+    T();
+    EP();
+  } else {
+    // Epsilon
+    // Quiere decir que no viene ninguno de los simbolos de suma o resta
+  }
+}
+
+function T() {
+  // T-> F TP
+  F();
+  TP();
+}
+
+function TP() {
+  //TP-> * F TP
+  //   | / F TP
+  //   | Epsilon
+  if (tokenActual.Tipo === "Signo por") {
+    valorVariable += "*";
+    emparejar("Signo por");
+    F();
+    TP();
+  } else if (tokenActual.Tipo === "Signo dividr") {
+    valorVariable += "/";
+    emparejar("Signo dividr");
+    F();
+    TP();
+  } else {
+    // Epsilon
+    // Quiere decir que no viene ninguno de los simbolos de multiplicacion o division
+  }
+}
+
+//Variable que compara el analisis semantico de que el valor de las variables sea el adecuado en la asignacion
+var Error_Semantico_Tipo_Asignacion = false;
+
+function F() {
+  //F->  (Expresiones)
+  //  | Numero
+  //  | Caracter
+  //  | Cadena
+  //  | True
+  //  | False
+
+  if (tokenActual.Tipo === "Parentesis izquierdo") {
+    valorVariable += "(";
+    emparejar("Parentesis izquierdo");
+    Expresiones();
+    valorVariable += ")";
+    emparejar("Parentesis derecho");
+  } else if (tokenActual.Tipo === "Numero") {
+    valorVariable += tokenActual.Lexema;
+    emparejar("Numero");
+  } else if (tokenActual.Tipo === "Cadena") {
+    valorVariable += tokenActual.Lexema;
+    emparejar("Cadena");
+  } else if (tokenActual.Tipo === "Reservada true") {
+    valorVariable += tokenActual.Lexema;
+    emparejar("Reservada true");
+  } else if (tokenActual.Tipo === "Reservada false") {
+    valorVariable += tokenActual.Lexema;
+    emparejar("Reservada false");
+  }else else if (tokenActual.Tipo === "Caracter") {
+    valorVariable += tokenActual.Lexema;
+    emparejar("Caracter");
+  }
+}
+
+/*Tomado del GitHub de Yela y GitLab de Elmer para crear perfecto emparejar xd
+ * A continuación se programa el metodo emparejar(match)
+ *
+ * Este metodo compara la entradda en la lista de tokens, es decir el tokenActual con lo que deberia
+ * venir, que es lo que se pasa como parametro, es decir "tip".
+ *
+ * Si "lo que viene" no es igual a "lo que deberia de venir", entonces se reporta el error,
+ * de lo contrario si no hemos llegado al final de la lista de tokens pasamos a analizar el
+ * siguiente token.
+ */
+var errorSintactico = false;
+var Error_Sintactico_Permiso = true;
+function emparejar(tip) {
+  if (errorSintactico) {
+    Error_Sintactico_Permiso = false;
+    if (tokenActual.Tipo != "Ultimo") {
+      indice++;
+      tokenActual = Lista_de_Tokens[indice];
+      if (tokenActual.Tipo === "Punto y coma") {
+        errorSintactico = false;
+      }
+    }
+  } else {
+    if (tokenActual.Tipo === tip) {
+      indice++;
+      tokenActual = Lista_de_Tokens[indice];
+    } else {
+      console.log(
+        ">> Error sintactico se esperaba [" +
+          tip +
+          "] en lugar de [" +
+          tokenActual.Tipo +
+          ", " +
+          tokenActual.Lexema +
+          ", " +
+          tokenActual.Fila +
+          "]"
+      );
+      errorSintactico = true;
+    }
+  }
 }
