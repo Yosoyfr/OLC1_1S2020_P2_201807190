@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="bootstrap.css" />
+  <title>Document</title>
+</head>
+
+<body>
+  <!--Navbar inicial -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <a class="navbar-brand" href="#">OLC1</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
+      aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!--Botones del navbar-->
+    <div class="collapse navbar-collapse" id="navbarColor01">
+      <ul class="navbar-nav mr-auto">
+        <!--Menu de archivo-->
+        <li class="nav-item">
+          <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+            <a class="nav-link" href="#">Archivo</a>
+            <div class="btn-group" role="group">
+              <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="false"></button>
+              <!--Opciones del menu-->
+              <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                <a class="dropdown-item" href="#">Abrir</a>
+                <a class="dropdown-item" href="#">Guardar</a>
+                <a class="dropdown-item" href="#">Guardar como...</a>
+                <a class="dropdown-item" href="#" id="btn-window" onclick="addWindow()">Agregar pestaña</a>
+              </div>
+            </div>
+          </div>
+        </li>
+        <!--Menu de reportes-->
+        <li class="nav-item">
+          <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+            <a class="nav-link" href="#">Reportes</a>
+            <div class="btn-group" role="group">
+              <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="false"></button>
+              <!--Opciones del menu-->
+              <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                <a class="dropdown-item" href="#">Archivo.py</a>
+                <a class="dropdown-item" href="#">Archivo.html</a>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" id="btn-analizar" onclick="run()">Run</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" data-toggle="modal" data-target="#myModal">About</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!--Container-->
+  <div class="jumbotron">
+    <!--Area de trabajo de los archivos-->
+    <div class="row">
+      <!--Lista de ventanas-->
+      <div class="col-md-6">
+        <ul class="nav nav-tabs border-primary" id="myTabs">
+          <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#p1" onclick="changeTab('txt1')">Pestaña 1</a>
+          </li>
+        </ul>
+        <div id="myTabContent" class="tab-content">
+          <div class="tab-pane fade show active" id="p1">
+            <div class="list-group" id="txt1" style="height: 270px; position: relative;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!--Consola-->
+      <div class="col-md-6">
+        <div class="card text-white bg-secondary border-primary mb-2">
+          <div class="card-header bg-primary ">Console</div>
+          <div class="card-body">
+            <textarea class="form-control border-secondary" id="exampleTextarea" rows="9" disabled></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-4" />
+
+    <!--Area de la tabla de simbolos y de los JSON-->
+    <div class="row">
+
+      <!--Tabla de simbolos-->
+      <div class="col-md-6">
+        <table class="table table-hover">
+          <thead>
+            <tr class="table-primary">
+              <th scope="col">Nombre</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Linea</th>
+              <th scope="col">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-active">
+              <th scope="row">Dark</th>
+              <td>Column content</td>
+              <td>Column content</td>
+              <td>Column content</td>
+            </tr>
+            <tr class="table-active">
+              <th scope="row">Dark</th>
+              <td>Column content</td>
+              <td>Column content</td>
+              <td>Column content</td>
+            </tr>
+            <tr class="table-active">
+              <th scope="row">Dark</th>
+              <td>Column content</td>
+              <td>Column content</td>
+              <td>Column content</td>
+            </tr>
+            <tr class="table-active">
+              <th scope="row">Dark</th>
+              <td>Column content</td>
+              <td>Column content</td>
+              <td>Column content</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!--Resultados de los HTMLL Y JSON-->
+      <div class="col-md-6">
+        <ul class="nav nav-tabs border-primary">
+          <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#p3">Archivo HTML</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#p4">Archivo JSON</a>
+          </li>
+        </ul>
+        <div id="myTabContent" class="tab-content">
+          <div class="tab-pane fade show active" id="p3">
+            <textarea class="form-control" id="exampleTextarea" rows="10" disabled></textarea>
+          </div>
+
+          <div class="tab-pane fade" id="p4">
+            <textarea class="form-control" id="exampleTextarea" rows="10" disabled></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!--Modal-->
+  <div class="modal" id="myModal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">About the programmer</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>
+            Francisco Suarez.
+          </p>
+          <p>
+            201807190
+          </p>
+          <p>
+            @yosoyfr
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="ace-builds-master/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script>
+    var editor = ace.edit("txt1");
+    //editor.setTheme("ace/theme/idle_fingers");
+    editor.setTheme("ace/theme/katzenmilch");
+    editor.session.setMode("ace/mode/csharp");
+    editor.setFontSize("14px");
+  </script>
+
+  <script src="app.js"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>
