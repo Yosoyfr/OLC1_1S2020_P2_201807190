@@ -807,6 +807,11 @@ function parser() {
   //Reiniamos todos los valores
   indice = 0;
   tokenActual = Lista_de_Tokens[indice];
+  errorSintactico = false;
+
+  //Metodos
+  metodoPerm = true;
+  mainPerm = true;
 
   //Llamada al no terminal inicial
   I();
@@ -815,10 +820,10 @@ function parser() {
 function I() {
   //Inicio de un documento c#
   //Puede que vengan comentarios
-  Comentarios();
+  ComentariosInicio();
   //Vamos a hacer esto de forma que si viene una clase o no
   let class_ = false;
-  if (tokenActual.Tipo == "Reservada class") {
+  if (tokenActual.Tipo === "Reservada class") {
     emparejar("Reservada class");
     emparejar("Identificador");
     emparejar("Llave izquierda");
@@ -835,12 +840,192 @@ function I() {
   //Final de un documento c#
   // si se encontro que venia una clase tiene que terminar de esta manera
   if (class_) {
-    emparejar("Llave derecha");
+    if (tokenActual.Tipo === "Llave derecha") {
+      emparejar("Llave derecha");
+    } else {
+      console.log(
+        ">> Error sintactico se esperaba [ LLave Derecha ] en lugar de [" +
+          tokenActual.Tipo +
+          ", " +
+          tokenActual.Lexema +
+          ", " +
+          tokenActual.Fila +
+          "]"
+      );
+    }
+  }
+}
+
+// Metodo que sirve para leer los valores a las variables
+var valorVariable = "";
+var Variables_Python = [];
+
+var metodoPerm = true;
+var mainPerm = true;
+function Inicio() {
+  asignacionVariables();
+  Comentarios();
+  //Condicionales();
+  //Ciclos();
+  //instruccionImprimir();
+  if (metodoPerm) {
+    Metodos();
+  }
+}
+
+function Main() {
+  mainPerm = false;
+  emparejar("Reservada main");
+  emparejar("Parentesis izquierdo");
+  emparejar("Parentesis derecho");
+  emparejar("Llave izquierda");
+  Inicio();
+  emparejar("Llave derecha");
+}
+
+function Metodos() {
+  if (tokenActual.Tipo === "Reservada void") {
+    emparejar("Reservada void");
+    metodoPerm = false;
+    if (mainPerm && tokenActual.Tipo === "Reservada main") {
+      Main();
+      metodoPerm = true;
+      Inicio();
+    } else {
+      emparejar("Identificador");
+      emparejar("Parentesis izquierdo");
+      if (tokenActual.Tipo != "Parentesis derecho") {
+        Parametros();
+        emparejar("Parentesis derecho");
+      } else {
+        emparejar("Parentesis derecho");
+      }
+      emparejar("Llave izquierda");
+      Inicio();
+      //Por si viene el return
+      if (tokenActual.Tipo === "Reservada return") {
+        emparejar("Reservada return");
+        emparejar("Punto y coma");
+      }
+      emparejar("Llave derecha");
+      metodoPerm = true;
+      Inicio();
+    }
   } else {
+    //Ya no hay mas metodos
+  }
+}
+
+//Parametros que tenga un metodo o funcion
+function Parametros() {
+  Asignacion_de_Tipo();
+  emparejar("Identificador");
+  if (tokenActual.Tipo === "Coma") {
+    emparejar("Coma");
+    Parametros();
+  }
+}
+
+function asignacionVariables() {
+  //<Inicio> -> <Asignacion de Variables>
+  //<Asignacion de Variables> -> <Declaracion> <Lista Declaracion> <Inicio>
+  Declaracion();
+  ListaDeclaracion();
+}
+
+function ListaDeclaracion() {
+  if (
+    tokenActual.Tipo.match(
+      /^(Reservada int|Reservada double|Reservada string|Reservada char|Reservada bool|Identificador)$/
+    )
+  ) {
+    Declaracion();
+    ListaDeclaracion();
+  } else {
+    //Ya no hay mas declaraciones
+  }
+}
+
+function Declaracion() {
+  //<Asignacion de Variables> -> <Declaracion>
+  //<Declaracion> -> <Asignacion de tipo> <Lista ID> <Opcion de Asignacion> PuntoyComa
+  if (
+    tokenActual.Tipo.match(
+      /^(Reservada int|Reservada double|Reservada string|Reservada char|Reservada bool)$/
+    )
+  ) {
+    cont_Var = 0;
+    Asignacion_de_Tipo();
+    Lista_ID();
+    //Esto es por si puede ser una funcion
+    if (cont_Var === 1 && tokenActual.Tipo === "Parentesis izquierdo") {
+      metodoPerm = false;
+      emparejar("Parentesis izquierdo");
+      if (tokenActual.Tipo != "Parentesis derecho") {
+        Parametros();
+        emparejar("Parentesis derecho");
+      } else {
+        emparejar("Parentesis derecho");
+      }
+      emparejar("Llave izquierda");
+      Inicio();
+      emparejar("Reservada return");
+      Expresiones();
+      emparejar("Punto y coma");
+      emparejar("Llave derecha");
+      metodoPerm = true;
+    } else {
+      Opcion_Asignacion();
+      emparejar("Punto y coma");
+    }
+  } else if (tokenActual.Tipo === "Identificador") {
+    Lista_ID();
+    Opcion_Asignacion();
+    emparejar("Punto y coma");
+  } else {
+    //Ya no hay mas declaraciones
+  }
+}
+
+//Lista de variables
+var ListaVariables = [];
+//Variable que sirve como tipo de asignacion a comparar
+/*
+ * int = 0
+ * string = 1
+ * char = 2
+ * float = 3
+ * bool = 4
+ */
+var tipo_variable = 0;
+function Asignacion_de_Tipo() {
+  ListaVariables = [];
+  if (tokenActual.Tipo === "Reservada int") {
+    //<Declaracion> -> int <Lista ID> <Opcion de Asignacion> PuntoyComa
+    emparejar("Reservada int");
+    tipo_variable = 0;
+  } else if (tokenActual.Tipo === "Reservada string") {
+    //<Declaracion> -> string <Lista ID> <Opcion de Asignacion> PuntoyComa
+    emparejar("Reservada string");
+    tipo_variable = 1;
+  } else if (tokenActual.Tipo === "Reservada char") {
+    //<Declaracion> -> char <Lista ID> <Opcion de Asignacion> PuntoyComa
+    emparejar("Reservada char");
+    tipo_variable = 2;
+  } else if (tokenActual.Tipo === "Reservada double") {
+    //<Declaracion> -> float <Lista ID> <Opcion de Asignacion> PuntoyComa
+    emparejar("Reservada double");
+    tipo_variable = 3;
+  } else if (tokenActual.Tipo === "Reservada bool") {
+    //<Declaracion> -> Bool <Lista ID> <Opcion de Asignacion> PuntoyComa
+    emparejar("Reservada bool");
+    tipo_variable = 4;
+  } else {
+    //<Declaracion> -> epsilon <Lista ID> <Opcion de Asignacion> PuntoyComa
+    // Para esta producción de EP en epsilon (cadena vacía), simplemente no se hace nada.
+    //Esto ya es un error
     console.log(
-      ">> Error sintactico se esperaba [" +
-        tip +
-        "] en lugar de [" +
+      ">> Error sintactico se esperaba [ Tipo de dato ] en lugar de [" +
         tokenActual.Tipo +
         ", " +
         tokenActual.Lexema +
@@ -849,19 +1034,97 @@ function I() {
         "]"
     );
     errorSintactico = true;
-    Error_Sintactico_Permiso = false;
   }
 }
 
-// Metodo que sirve para leer los valores a las variables
-var valorVariable = "";
-var Variables_Python = [];
+var cont_Var = 0;
+function Lista_ID() {
+  valorVariable = "";
+  //< Declaracion > -> < Asignacion de tipo (Definido)> < Lista ID > < Opcion de Asignacion> PuntoyComa
+  //< Lista ID > -> ID(Variable) <Lista ID'>
+  if (tokenActual.Tipo === "Identificador") {
+    let variableExiste = false;
+    for (let i = 0; i < ListaVariablesGlobales.length; i++) {
+      let element = ListaVariablesGlobales[i].Lexema;
+      if (element === tokenActual.Lexema) {
+        variableExiste = true;
+      }
+    }
+    if (variableExiste) {
+      ListaVariables = [];
+    } else {
+      ListaVariablesGlobales.push(tokenActual);
+    }
+    try {
+      ListaVariables.push(tokenActual);
+    } catch (error) {
+      console.log(
+        ">> Error sintactico se esperaba [ Tipo de dato ] en lugar de [" +
+          tokenActual.Tipo +
+          ", " +
+          tokenActual.Lexema +
+          ", " +
+          tokenActual.Fila +
+          "]"
+      );
+    }
+    emparejar("Identificador");
+    cont_Var++;
+    Lista_ID_1();
+  } else {
+    console.log(
+      ">> Error sintactico se esperaba [ Identificador ] en lugar de [" +
+        tokenActual.Tipo +
+        ", " +
+        tokenActual.Lexema +
+        ", " +
+        tokenActual.Fila +
+        "]"
+    );
+    errorSintactico = true;
+  }
+}
 
-function Inicio() {
-  asignacionVariables();
-  Condicionales();
-  Ciclos();
-  instruccionImprimir();
+function Lista_ID_1() {
+  //<Lista ID_1> -> Coma ID(Variable) <Lista ID'>
+  //             | Epsilon
+  if (tokenActual.Tipo === "Coma") {
+    emparejar("Coma");
+    ListaVariables.push(tokenActual);
+    ListaVariablesGlobales.push(tokenActual);
+    emparejar("Identificador");
+    cont_Var++;
+    Lista_ID_1();
+  } else {
+    //Epsilon
+    //No se hace nada ni se toma como error ya que esto es si viene o no alguna nueva variable para
+    //para asignarle el valor de asignacion a la variable
+  }
+}
+
+function Opcion_Asignacion() {
+  var valorAux = valorVariable;
+  if (tokenActual.Tipo === "Signo igual") {
+    //<Opcion de Asignacion> -> Igual(=) <Expresion>
+    emparejar("Signo igual");
+    Asignacion_Expresion();
+  } else {
+    if (tipo_variable == 1) {
+      valorVariable = '""';
+    } else if (tipo_variable == 0) {
+      valorVariable = "0";
+    } else if (tipo_variable == 2) {
+      valorVariable = "''";
+    } else if (tipo_variable == 3) {
+      valorVariable = "0.0";
+    } else if (tipo_variable == 4) {
+      valorVariable = "false";
+    } else {
+      valorVariable = "0";
+    }
+    //<Opcion de Asignacion> -> Epsilon
+    //Si viene epsilon quiere decir que no se le agrego un valor a la variable.
+  }
 }
 
 //Aqui es donde se le agrega un valor a la asignacion que se le hizo a la variable declarada o variables.
@@ -912,9 +1175,9 @@ function TP() {
     emparejar("Signo por");
     F();
     TP();
-  } else if (tokenActual.Tipo === "Signo dividr") {
+  } else if (tokenActual.Tipo === "Signo dividir") {
     valorVariable += "/";
-    emparejar("Signo dividr");
+    emparejar("Signo dividir");
     F();
     TP();
   } else {
@@ -933,6 +1196,7 @@ function F() {
   //  | Cadena
   //  | True
   //  | False
+  //  | funciones
 
   if (tokenActual.Tipo === "Parentesis izquierdo") {
     valorVariable += "(";
@@ -952,9 +1216,57 @@ function F() {
   } else if (tokenActual.Tipo === "Reservada false") {
     valorVariable += tokenActual.Lexema;
     emparejar("Reservada false");
-  }else else if (tokenActual.Tipo === "Caracter") {
+  } else if (tokenActual.Tipo === "Caracter") {
     valorVariable += tokenActual.Lexema;
     emparejar("Caracter");
+  } else if (tokenActual.Tipo === "Cadena html") {
+    valorVariable += tokenActual.Lexema;
+    emparejar("Cadena html");
+  } else {
+    valorVariable += tokenActual.Lexema;
+    emparejar("Identificador");
+    //Esto es para la asignacion de funciones
+    if (tokenActual.Tipo === "Parentesis izquierdo") {
+      emparejar("Parentesis izquierdo");
+      if (tokenActual.Tipo != "Parentesis derecho") {
+        expF();
+        emparejar("Parentesis derecho");
+      } else {
+        emparejar("Parentesis derecho");
+      }
+    }
+  }
+}
+
+function expF() {
+  Expresiones();
+  if (tokenActual.Tipo === "Coma") {
+    emparejar("Coma");
+    expF();
+  }
+}
+
+function Comentarios() {
+  if (tokenActual.Tipo === "Comentario de linea") {
+    emparejar("Comentario de linea");
+    Inicio();
+  } else if (tokenActual.Tipo === "Comentario multilinea") {
+    emparejar("Comentario multilinea");
+    Inicio();
+  } else {
+    //Ya no hay mas comentarios, con lo que pasamos de largo
+  }
+}
+
+function ComentariosInicio() {
+  if (tokenActual.Tipo === "Comentario de linea") {
+    emparejar("Comentario de linea");
+    I();
+  } else if (tokenActual.Tipo === "Comentario multilinea") {
+    emparejar("Comentario multilinea");
+    I();
+  } else {
+    //Ya no hay mas comentarios, con lo que pasamos de largo
   }
 }
 
@@ -970,6 +1282,7 @@ function F() {
  */
 var errorSintactico = false;
 var Error_Sintactico_Permiso = true;
+
 function emparejar(tip) {
   if (errorSintactico) {
     Error_Sintactico_Permiso = false;
@@ -981,22 +1294,24 @@ function emparejar(tip) {
       }
     }
   } else {
-    if (tokenActual.Tipo === tip) {
-      indice++;
-      tokenActual = Lista_de_Tokens[indice];
-    } else {
-      console.log(
-        ">> Error sintactico se esperaba [" +
-          tip +
-          "] en lugar de [" +
-          tokenActual.Tipo +
-          ", " +
-          tokenActual.Lexema +
-          ", " +
-          tokenActual.Fila +
-          "]"
-      );
-      errorSintactico = true;
+    if (tokenActual.Tipo != "Ultimo") {
+      if (tokenActual.Tipo === tip) {
+        indice++;
+        tokenActual = Lista_de_Tokens[indice];
+      } else {
+        console.log(
+          ">> Error sintactico se esperaba [" +
+            tip +
+            "] en lugar de [" +
+            tokenActual.Tipo +
+            ", " +
+            tokenActual.Lexema +
+            ", " +
+            tokenActual.Fila +
+            "]"
+        );
+        errorSintactico = true;
+      }
     }
   }
 }
