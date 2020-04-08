@@ -117,7 +117,7 @@ function analisis_Lexico(entrada) {
         }
         //Revisara si puede ser un caracter
         else if (c === "'") {
-          estado = 16;
+          estado = 18;
           i--;
           columna--;
         }
@@ -130,6 +130,12 @@ function analisis_Lexico(entrada) {
           columna = 0;
           fila++;
           estado = 0;
+        }
+        //Revisara si puede ser un caracter
+        else if (c == "'") {
+          estado = 18;
+          i--;
+          columna--;
         }
         //Lista de Tokens ya establecidos que son todos los simbolos admitidos
         else if (c === "{") {
@@ -196,6 +202,12 @@ function analisis_Lexico(entrada) {
           lexema += c;
         } else if (c === "!") {
           estado = 11;
+          lexema += c;
+        } else if (c === "|") {
+          estado = 16;
+          lexema += c;
+        } else if (c === "&") {
+          estado = 17;
           lexema += c;
         }
         //Si no es ninguno de la lista de tokens, nos devuelve un error
@@ -527,8 +539,7 @@ function analisis_Lexico(entrada) {
             i--;
             columna--;
             estado = 0;
-            pasoLibre = false;
-            addError("Desconocido", lexema, fila, columna);
+            addToken("Not", lexema, fila, columna);
             lexema = "";
           } else {
             lexema = "";
@@ -607,6 +618,113 @@ function analisis_Lexico(entrada) {
           lexema += c;
           estado = 15;
         }
+        break;
+      case 16:
+        if (c === "|" && lexema.length < 2) {
+          lexema += c;
+          estado = 16;
+        } else if (lexema === "||") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken("Or", lexema, fila, columna);
+          lexema = "";
+        } else {
+          if (lexema === "|") {
+            i--;
+            columna--;
+            estado = 0;
+            addError("Desconocido", lexema, fila, columna);
+            pasoLibre = false;
+            lexema = "";
+          } else {
+            lexema = "";
+            i--;
+            columna--;
+            estado = 0;
+          }
+        }
+        break;
+      case 17:
+        if (c === "&" && lexema.length < 2) {
+          lexema += c;
+          estado = 17;
+        } else if (lexema === "&&") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken("And", lexema, fila, columna);
+          lexema = "";
+        } else {
+          if (lexema === "&") {
+            i--;
+            columna--;
+            estado = 0;
+            addError("Desconocido", lexema, fila, columna);
+            pasoLibre = false;
+            lexema = "";
+          } else {
+            lexema = "";
+            i--;
+            columna--;
+            estado = 0;
+          }
+        }
+        break;
+      case 18:
+        //Comprueba que es un caracter lo que viene viendo si es comilla simple
+        contador_Caracter = 0;
+        if (c == "'") {
+          lexema += c;
+          estado = 19;
+        }
+        break;
+      case 19:
+        //Comprobara el caracter que viene para asignarle y cuando encuentre el otro (') cierra
+        if (c != "'") {
+          contador_Caracter++;
+          lexema += c;
+          estado = 19;
+        } else if (contador_Caracter < 2) {
+          estado = 20;
+          i--;
+          columna--;
+        } else if (contador_Caracter >= 2) {
+          estado = 21;
+          i--;
+          columna--;
+        }
+        break;
+      case 20:
+        //Aqui cierra la asignacion del carater
+        if (c == "'") {
+          lexema += c;
+          addToken("Caracter", lexema, fila, columna);
+          estado = 0;
+          lexema = "";
+        }
+        break;
+      case 21:
+        //Comprobara todos los datos que contendra la cadena de HTML, hasta encontrar otro (') para cerrar la cadena
+        if (c === "\n") {
+          columna = 0;
+          fila++;
+          estado = 21;
+        } else if (c != "'") {
+          lexema += c;
+          estado = 21;
+        } else {
+          estado = 22;
+          i--;
+          columna--;
+        }
+        break;
+      case 22:
+        ///Aqui cierra la cadena al encontrar (')
+        lexema += c;
+        addToken("Cadena html", lexema, fila, columna);
+        estado = 0;
+        lexema = "";
         break;
       default:
         lexema += c;
