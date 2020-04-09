@@ -812,10 +812,6 @@ function parser() {
   errorSintactico = false;
   case_inicial = true;
 
-  //Metodos
-  metodoPerm = true;
-  mainPerm = true;
-
   //Llamada al no terminal inicial
   Inicio();
 }
@@ -823,17 +819,15 @@ function parser() {
 function Inicio() {
   //Inicio de un documento c#
   //Puede que vengan comentarios
-  //ComentariosInicio();
+  ComentariosGlobales();
   //Vamos a hacer esto de forma que si viene una clase o no
 
   emparejar("Reservada class");
   emparejar("Identificador");
   emparejar("Llave izquierda");
-  //ComentariosInicio();
   //Cuerpo de las sentencias y codigos del documento c#
   Declaracion_Cont();
 
-  //ComentariosInicio();
   //Final de un documento c#
   // si se encontro que venia una clase tiene que terminar de esta manera
   if (tokenActual.Tipo === "Llave derecha") {
@@ -849,13 +843,15 @@ function Inicio() {
         "]"
     );
   }
-  //ComentariosInicio();
+  ComentariosGlobales();
 }
 
+//<Declaracion_Cont>:= <Metodos> <Declaracion_Cont>
+//                  | <Declaracion_Var>
 function Declaracion_Cont() {
+  Lista_Declaracion();
   Metodos();
-  Funciones();
-  Declaracion_Var();
+  ComentariosMet();
 }
 
 var mainPerm = true;
@@ -872,13 +868,45 @@ function Metodos() {
   }
 }
 
-function Inicio() {
-  Declaracion_Var();
+function Sentencias() {
+  Lista_Declaracion();
+  Comentarios();
+  Imprimir();
+}
+
+function Imprimir() {
+  valorVariable = "";
+  if (tokenActual.Tipo === "Reservada console") {
+    emparejar("Reservada console");
+    emparejar("Punto");
+    emparejar("Reservada write");
+    emparejar("Parentesis izquierdo");
+    //Expresion a imprimir
+    Expresiones();
+    emparejar("Parentesis derecho");
+    emparejar("Punto y coma");
+    Sentencias();
+  } else {
+    //Ya no vienen mas instrucciones de imprimir con lo que saldremos del metodo
+  }
+}
+
+function Lista_Declaracion() {
+  if (
+    tokenActual.Tipo.match(
+      /^(Reservada int|Reservada double|Reservada string|Reservada char|Reservada bool|Identificador)$/
+    )
+  ) {
+    Declaracion_Var();
+    Lista_Declaracion();
+  } else {
+    //Ya no hay mas declaraciones
+  }
 }
 
 var cont_Var = 0;
 function Declaracion_Var() {
-  //<Declaracion> -> <Asignacion de tipo> <Lista ID> <Opcion de Asignacion> PuntoyComa
+  //<Declaracion_Var> -> <Asignacion_de_tipo>_<Lista ID> <Opcion_de_Asignacion> PuntoyComa
   if (
     tokenActual.Tipo.match(
       /^(Reservada int|Reservada double|Reservada string|Reservada char|Reservada bool)$/
@@ -934,27 +962,27 @@ function Lista_ID_1() {
 
 function Asignacion_de_Tipo() {
   if (tokenActual.Tipo === "Reservada int") {
-    //<Declaracion> -> int <Lista ID> <Opcion de Asignacion> PuntoyComa
+    //<Declaracion_Var> -> int <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     emparejar("Reservada int");
     tipo_variable = 0;
   } else if (tokenActual.Tipo === "Reservada string") {
-    //<Declaracion> -> string <Lista ID> <Opcion de Asignacion> PuntoyComa
+    //<Declaracion_Var> -> string <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     emparejar("Reservada string");
     tipo_variable = 1;
   } else if (tokenActual.Tipo === "Reservada char") {
-    //<Declaracion> -> char <Lista ID> <Opcion de Asignacion> PuntoyComa
+    //<Declaracion_Var> -> char <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     emparejar("Reservada char");
     tipo_variable = 2;
   } else if (tokenActual.Tipo === "Reservada double") {
-    //<Declaracion> -> float <Lista ID> <Opcion de Asignacion> PuntoyComa
+    //<Declaracion_Var> -> float <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     emparejar("Reservada double");
     tipo_variable = 3;
   } else if (tokenActual.Tipo === "Reservada bool") {
-    //<Declaracion> -> Bool <Lista ID> <Opcion de Asignacion> PuntoyComa
+    //<Declaracion_Var> -> Bool <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     emparejar("Reservada bool");
     tipo_variable = 4;
   } else {
-    //<Declaracion> -> epsilon <Lista ID> <Opcion de Asignacion> PuntoyComa
+    //<Declaracion_Var> -> epsilon <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     // Para esta producción de EP en epsilon (cadena vacía), simplemente no se hace nada.
     //Esto ya es un error
     console.log(
@@ -972,7 +1000,7 @@ function Asignacion_de_Tipo() {
 
 function Opcion_Asignacion() {
   if (tokenActual.Tipo === "Signo igual") {
-    //<Opcion de Asignacion> -> Igual(=) <Expresion>
+    //<Opcion_de_Asignacion> -> Igual(=) <Expresion>
     emparejar("Signo igual");
     valorVariable = "";
     Expresiones();
@@ -990,7 +1018,7 @@ function Opcion_Asignacion() {
     } else {
       valorVariable = "0";
     }
-    //<Opcion de Asignacion> -> Epsilon
+    //<Opcion_de_Asignacion> -> Epsilon
     //Si viene epsilon quiere decir que no se le agrego un valor a la variable.
   }
 }
@@ -1101,13 +1129,11 @@ function KP() {
 }
 
 function F() {
-  //F->  (Expresiones)
-  //  | Numero
-  //  | Caracter
+  //F-> Numero
   //  | Cadena
-  //  | True
-  //  | False
-  //  | funciones
+  //  | Caracter
+  //  | Cadena HTML
+  //  | NotF
 
   if (tokenActual.Tipo === "Numero") {
     valorVariable += tokenActual.Lexema;
@@ -1115,12 +1141,6 @@ function F() {
   } else if (tokenActual.Tipo === "Cadena") {
     valorVariable += tokenActual.Lexema;
     emparejar("Cadena");
-  } else if (tokenActual.Tipo === "Reservada true") {
-    valorVariable += tokenActual.Lexema;
-    emparejar("Reservada true");
-  } else if (tokenActual.Tipo === "Reservada false") {
-    valorVariable += tokenActual.Lexema;
-    emparejar("Reservada false");
   } else if (tokenActual.Tipo === "Caracter") {
     valorVariable += tokenActual.Lexema;
     emparejar("Caracter");
@@ -1133,6 +1153,14 @@ function F() {
 }
 
 function NotF() {
+  //NotF:= !(Expresiones)
+  //     | !True
+  //     | !False
+  //     | !ID <IDP>
+  //     | (Expresiones)
+  //     | True
+  //     | False
+  //     | ID <IDP>
   //Comparamos si puede venir un not o si no
   if (tokenActual.Tipo === "Not") {
     emparejar("Not");
@@ -1154,20 +1182,29 @@ function NotF() {
   } else {
     valorVariable += tokenActual.Lexema;
     emparejar("Identificador");
-    //Esto es para la asignacion de funciones
-    if (tokenActual.Tipo === "Parentesis izquierdo") {
-      emparejar("Parentesis izquierdo");
-      if (tokenActual.Tipo != "Parentesis derecho") {
-        expF();
-        emparejar("Parentesis derecho");
-      } else {
-        emparejar("Parentesis derecho");
-      }
+    IDP();
+  }
+}
+
+function IDP() {
+  //IDP:= ()
+  //    | (<Expresion> <ExpP>)
+  //    | Epsilon
+  //Esto es para la asignacion de funciones
+  if (tokenActual.Tipo === "Parentesis izquierdo") {
+    emparejar("Parentesis izquierdo");
+    if (tokenActual.Tipo != "Parentesis derecho") {
+      expF();
+      emparejar("Parentesis derecho");
+    } else {
+      emparejar("Parentesis derecho");
     }
   }
 }
 
 function expF() {
+  //expF:= , <Expresion> <ExpP>
+  //    | Epsilon
   Expresiones();
   if (tokenActual.Tipo === "Coma") {
     emparejar("Coma");
@@ -1177,6 +1214,9 @@ function expF() {
 
 //Parametros que tenga un metodo o funcion
 function Parametros() {
+  //expF:= <Asignacion_de_Tipo> ID
+  //    | <Asignacion_de_Tipo> ID ,
+  //    | Epsilon
   Asignacion_de_Tipo();
   emparejar("Identificador");
   if (tokenActual.Tipo === "Coma") {
@@ -1212,6 +1252,36 @@ function Metodo_Void() {
     emparejar("Punto y coma");
   }
   emparejar("Llave derecha");
+}
+
+function Comentarios() {
+  if (tokenActual.Tipo === "Comentario de linea") {
+    emparejar("Comentario de linea");
+    Sentencias();
+  } else if (tokenActual.Tipo === "Comentario multilinea") {
+    emparejar("Comentario multilinea");
+    Sentencias();
+  }
+}
+
+function ComentariosGlobales() {
+  if (tokenActual.Tipo === "Comentario de linea") {
+    emparejar("Comentario de linea");
+    ComentariosGlobales();
+  } else if (tokenActual.Tipo === "Comentario multilinea") {
+    emparejar("Comentario multilinea");
+    ComentariosGlobales();
+  }
+}
+
+function ComentariosMet() {
+  if (tokenActual.Tipo === "Comentario de linea") {
+    emparejar("Comentario de linea");
+    Declaracion_Cont();
+  } else if (tokenActual.Tipo === "Comentario multilinea") {
+    emparejar("Comentario multilinea");
+    Declaracion_Cont();
+  }
 }
 
 /*Tomado del GitHub de Yela y GitLab de Elmer para crear perfecto emparejar xd
