@@ -95,45 +95,27 @@
 
     <!--Area de la tabla de simbolos y de los JSON-->
     <div class="row">
-
+      <style>
+        .contenedor {
+          height: 280px;
+          overflow-x: hidden;
+        }
+      </style>
       <!--Tabla de simbolos-->
       <div class="col-md-6">
-        <table class="table table-hover">
-          <thead>
-            <tr class="table-primary">
-              <th scope="col">Nombre</th>
-              <th scope="col">Tipo</th>
-              <th scope="col">Linea</th>
-              <th scope="col">Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="table-active">
-              <th scope="row">Dark</th>
-              <td>Column content</td>
-              <td>Column content</td>
-              <td>Column content</td>
-            </tr>
-            <tr class="table-active">
-              <th scope="row">Dark</th>
-              <td>Column content</td>
-              <td>Column content</td>
-              <td>Column content</td>
-            </tr>
-            <tr class="table-active">
-              <th scope="row">Dark</th>
-              <td>Column content</td>
-              <td>Column content</td>
-              <td>Column content</td>
-            </tr>
-            <tr class="table-active">
-              <th scope="row">Dark</th>
-              <td>Column content</td>
-              <td>Column content</td>
-              <td>Column content</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="contenedor">
+          <table class="table table-hover">
+            <thead>
+              <tr class="table-primary">
+                <th scope="col">Tipo</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Linea</th>
+              </tr>
+            </thead>
+            <tbody id="table_var">
+            </tbody>
+          </table>
+        </div>
       </div>
       <!--Resultados de los HTMLL Y JSON-->
       <div class="col-md-6">
@@ -147,11 +129,11 @@
         </ul>
         <div id="myTabContent" class="tab-content">
           <div class="tab-pane fade show active" id="p3">
-            <textarea class="form-control" id="exampleTextarea" rows="10" disabled></textarea>
+            <textarea class="form-control" id="archivo_html" rows="10" disabled></textarea>
           </div>
 
           <div class="tab-pane fade" id="p4">
-            <textarea class="form-control" id="exampleTextarea" rows="10" disabled></textarea>
+            <textarea class="form-control" id="archivo_json" rows="10" disabled></textarea>
           </div>
         </div>
       </div>

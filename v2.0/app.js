@@ -52,6 +52,38 @@ function addWindow() {
   ctrl_Tabs++;
 }
 
+function addTable() {
+  //Obtenemos la tabla
+  let table = document.getElementById("table_var");
+  //Limpiamos la tabla
+  $(table).empty();
+  for (let i = 0; i < ListaVariables.length; i++) {
+    //Creamos el nuevo renglon
+    let tr = document.createElement("tr");
+    tr.setAttribute("class", "table-active");
+    //Creamos las divisiones
+    //Tipo
+    let aux_Tipo = document.createTextNode(ListaVariables[i].Tipo);
+    let th_Tipo = document.createElement("th");
+    th_Tipo.setAttribute("scope", "row");
+    th_Tipo.appendChild(aux_Tipo);
+    //Nombre
+    let aux_Nombre = document.createTextNode(ListaVariables[i].Identificador);
+    let td_Nombre = document.createElement("td");
+    td_Nombre.appendChild(aux_Nombre);
+    //Linea
+    let aux_Linea = document.createTextNode(ListaVariables[i].Fila);
+    let td_Linea = document.createElement("td");
+    td_Linea.appendChild(aux_Linea);
+    //Le agremamos cada division al renglon
+    tr.appendChild(th_Tipo);
+    tr.appendChild(td_Nombre);
+    tr.appendChild(td_Linea);
+    //Añadimos el renglon a la tabla
+    table.appendChild(tr);
+  }
+}
+
 //Seleccion de pestaña
 var select_Tab = "txt1";
 //Funcion para cambiar la pestaña seleccionada
@@ -67,6 +99,7 @@ function run() {
   console.log(Lista_de_Tokens);
   console.log(Lista_de_Errores);
   parser();
+  addTable();
 }
 
 //Proceso de analisis lexico
@@ -796,7 +829,6 @@ var Codigo_Python = "";
 var Contador_Tabs_Python = 0;
 
 //Lista de tokens que el parser recibe del analizador lexico
-var ListaVariablesGlobales = [];
 var Lista_Errores_Sintaticos = [];
 
 //Funcion del parser
@@ -804,7 +836,7 @@ function parser() {
   //Vamos a añadir un ultimo token para saber donde termina
   addToken("Ultimo", "Ultimo", "0", "0");
   //Reiniciamos las listas
-  ListaVariablesGlobales = [];
+  ListaVariables = [];
   Lista_Errores_Sintaticos = [];
   //Reiniamos todos los valores
   indice = 0;
@@ -872,9 +904,166 @@ function Sentencias() {
   Lista_Declaracion();
   Comentarios();
   Imprimir();
+  Condicionales();
+  Ciclos();
+}
+
+function Ciclos() {
+  //<Ciclos> -> for (<Dec> = <Expresion>; <Expresion> ; <Alter>) { <Sentencias> }
+  //         | while ( <Expresion> <SimboloComparacion> <Expresion>) { <Inicio> }
+  if (tokenActual.Tipo === "Reservada for") {
+    Ciclo_For();
+    Sentencias();
+  } else if (tokenActual.Tipo === "Reservada while") {
+    Ciclo_While();
+    Sentencias();
+  }
+}
+
+function Ciclo_For() {
+  //<For> -> for ( <Declaracion> ; <Expresion> ;  Alter) { <Sentencias> }
+  emparejar("Reservada for");
+  emparejar("Parentesis izquierdo");
+  Declaracion_Var();
+  Expresiones();
+  emparejar("Punto y coma");
+  Alter_Ciclos();
+  emparejar("Parentesis derecho");
+  emparejar("Llave izquierda");
+  Sentencias();
+  emparejar("Llave derecha");
+}
+
+function Alter_Ciclos() {
+  emparejar("Identificador");
+  if (tokenActual.Tipo === "Disminucion") {
+    emparejar("Disminucion");
+  } else {
+    emparejar("Incremento");
+  }
+}
+
+function Condicionales() {
+  valorVariable = "";
+  //<Condicionales> -> <If> <Else> <Sentencias>
+  //                 | <Switch> <Sentencias>
+  //                 | Epsilon
+  if (tokenActual.Tipo === "Reservada if") {
+    If();
+    Else();
+    Sentencias();
+  } else if (tokenActual.Tipo === "Reservada switch") {
+    Switch();
+    Sentencias();
+  }
+}
+
+function Switch() {
+  //<Switch> -> switch ( ID ) { <Cases> <Defaul> }
+  emparejar("Reservada switch");
+  emparejar("Parentesis izquierdo");
+  emparejar("Identificador");
+  emparejar("Parentesis derecho");
+  emparejar("Llave izquierda");
+  Cases();
+  Default();
+  emparejar("Llave derecha");
+}
+
+function Cases() {
+  //<Cases> -> case numero : <CasesP>
+  //        | Epsilon
+  if (tokenActual.Tipo === "Reservada case") {
+    emparejar("Reservada case");
+    emparejar("Numero");
+    emparejar("Dos puntos");
+    CasesP();
+  }
+}
+
+function CasesP() {
+  //<Cases> -> <Cases>
+  //        | <Sentencias> break ;
+  if (tokenActual.Tipo === "Reservada case") {
+    Cases();
+  } else {
+    //Codigo del bloque del case (num) o de varios cases
+    Sentencias();
+    emparejar("Reservada break");
+    emparejar("Punto y coma");
+    Cases();
+  }
+}
+
+function Default() {
+  //<Default> -> default : <Sentencias> break ;
+  //        | Epsilon
+  if (tokenActual.Tipo === "Reservada default") {
+    emparejar("Reservada default");
+    emparejar("Dos puntos");
+    //Codigo del bloque del default
+    Sentencias();
+    emparejar("Reservada break");
+    emparejar("Punto y coma");
+  }
+}
+
+function If() {
+  //<If> -> if ( <Expresiones> ) { <Sentencias> }
+  //El condicional encontrado es el IF
+  emparejar("Reservada if");
+  emparejar("Parentesis izquierdo");
+  //Condicional que hace cumplir o no el if
+  Expresiones();
+  emparejar("Parentesis derecho");
+  emparejar("Llave izquierda");
+  //Codigo del bloque del if
+  Sentencias();
+  if (tokenActual.Tipo === "Reservada return") {
+    Return();
+  }
+  emparejar("Llave derecha");
+}
+
+function Else() {
+  //<Else> -> else <ElseP>
+  //        | Epsilon
+  if (tokenActual.Tipo === "Reservada else") {
+    emparejar("Reservada else");
+    //Miramos si es un else normal o si no un else if
+    ElseP();
+  }
+}
+
+function ElseP() {
+  //<ElseP> -> <If>
+  //       | { <Sentencias> }
+  if (tokenActual.Tipo === "Reservada if") {
+    If();
+    Else();
+  } else {
+    emparejar("Llave izquierda");
+    //Codigo del bloque del if
+    Sentencias();
+    if (tokenActual.Tipo === "Reservada return") {
+      Return();
+    }
+    emparejar("Llave derecha");
+  }
+}
+
+function Return() {
+  emparejar("Reservada return");
+  if (tokenActual.Tipo != "Punto y coma") {
+    Expresiones();
+    emparejar("Punto y coma");
+  } else {
+    emparejar("Punto y coma");
+  }
 }
 
 function Imprimir() {
+  //<Imprimir> -> Console . Write ( <Expresion> ) ;
   valorVariable = "";
   if (tokenActual.Tipo === "Reservada console") {
     emparejar("Reservada console");
@@ -907,12 +1096,12 @@ function Lista_Declaracion() {
 var cont_Var = 0;
 function Declaracion_Var() {
   //<Declaracion_Var> -> <Asignacion_de_tipo>_<Lista ID> <Opcion_de_Asignacion> PuntoyComa
+  cont_Var = 0;
   if (
     tokenActual.Tipo.match(
       /^(Reservada int|Reservada double|Reservada string|Reservada char|Reservada bool)$/
     )
   ) {
-    cont_Var = 0;
     Asignacion_de_Tipo();
     Lista_ID();
     //Esto es por si puede ser una funcion
@@ -935,15 +1124,43 @@ function Declaracion_Var() {
       emparejar("Punto y coma");
     }
   } else if (tokenActual.Tipo === "Identificador") {
+    temp_variable = "";
+    for (let i = 0; i < ListaVariables.length; i++) {
+      if (ListaVariables[i].Identificador === tokenActual.Lexema) {
+        temp_variable = ListaVariables[i].Tipo;
+      }
+    }
     Lista_ID();
-    Opcion_Asignacion();
-    emparejar("Punto y coma");
+    if (
+      cont_Var === 1 &&
+      tokenActual.Tipo.match(/^(Disminucion|Incremento)$/)
+    ) {
+      Alter();
+      emparejar("Punto y coma");
+    } else {
+      Opcion_Asignacion();
+      emparejar("Punto y coma");
+    }
+  }
+}
+
+function Alter() {
+  if (tokenActual.Tipo === "Disminucion") {
+    emparejar("Disminucion");
+  } else {
+    emparejar("Incremento");
   }
 }
 
 function Lista_ID() {
   valorVariable = "";
   //< Lista ID > -> ID(Variable) <Lista ID'>
+  if (Lista_de_Tokens[indice + 1].Lexema != "(") {
+    if (temp_variable === "") {
+      temp_variable = "No identificado";
+    }
+    addVar(temp_variable, tokenActual.Lexema, tokenActual.Fila);
+  }
   emparejar("Identificador");
   cont_Var++;
   Lista_ID_1();
@@ -954,33 +1171,58 @@ function Lista_ID_1() {
   //             | Epsilon
   if (tokenActual.Tipo === "Coma") {
     emparejar("Coma");
+    if (Lista_de_Tokens[indice + 1].Lexema != "(") {
+      if (temp_variable === "") {
+        temp_variable = "Tipo no identificado";
+      }
+      addVar(temp_variable, tokenActual.Lexema, tokenActual.Fila);
+    }
     emparejar("Identificador");
     cont_Var++;
     Lista_ID_1();
   }
 }
 
+//Lista de variables
+var ListaVariables = [];
+
+//Variable que sirve como tipo de asignacion a comparar
+/*
+ * int = 0
+ * string = 1
+ * char = 2
+ * float = 3
+ * bool = 4
+ */
+
+var tipo_variable = 0;
+var temp_variable = "";
 function Asignacion_de_Tipo() {
   if (tokenActual.Tipo === "Reservada int") {
     //<Declaracion_Var> -> int <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     emparejar("Reservada int");
     tipo_variable = 0;
+    temp_variable = "int";
   } else if (tokenActual.Tipo === "Reservada string") {
     //<Declaracion_Var> -> string <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     emparejar("Reservada string");
     tipo_variable = 1;
+    temp_variable = "string";
   } else if (tokenActual.Tipo === "Reservada char") {
     //<Declaracion_Var> -> char <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     emparejar("Reservada char");
     tipo_variable = 2;
+    temp_variable = "char";
   } else if (tokenActual.Tipo === "Reservada double") {
     //<Declaracion_Var> -> float <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     emparejar("Reservada double");
     tipo_variable = 3;
+    temp_variable = "double";
   } else if (tokenActual.Tipo === "Reservada bool") {
     //<Declaracion_Var> -> Bool <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     emparejar("Reservada bool");
     tipo_variable = 4;
+    temp_variable = "bool";
   } else {
     //<Declaracion_Var> -> epsilon <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     // Para esta producción de EP en epsilon (cadena vacía), simplemente no se hace nada.
@@ -997,6 +1239,9 @@ function Asignacion_de_Tipo() {
     errorSintactico = true;
   }
 }
+
+// Metodo que sirve para leer los valores a las variables
+var valorVariable = "";
 
 function Opcion_Asignacion() {
   if (tokenActual.Tipo === "Signo igual") {
@@ -1328,4 +1573,13 @@ function emparejar(tip) {
       }
     }
   }
+}
+
+//Funcion para añadir a la lista de errores
+function addVar(tipo, id, fila) {
+  ListaVariables.push({
+    Tipo: tipo,
+    Identificador: id,
+    Fila: fila,
+  });
 }
