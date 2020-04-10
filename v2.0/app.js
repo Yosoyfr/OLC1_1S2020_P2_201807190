@@ -1,3 +1,35 @@
+//Archivos abiertos en las pestañas
+var Archivos_Abiertos = [];
+//Proceso para la lectura de archivos
+function leerArchivo(e) {
+  var archivo = e.target.files[0];
+  if (!archivo) {
+    return;
+  }
+  console.log(archivo.name);
+  var lector = new FileReader();
+  lector.onload = function (e) {
+    var contenido = e.target.result;
+    mostrarContenido(contenido);
+  };
+  lector.readAsText(archivo);
+}
+
+function mostrarContenido(contenido) {
+  //Creamos la pestaña
+  addWindow();
+  //Seleccionamos el texto de la pestaña seleccionada
+  let editor = ace.edit("txt" + (ctrl_Tabs - 1));
+  //Le asignamos lo leido
+  editor.getSession().setValue(contenido);
+}
+
+//Le asignamos el metodo al boton de abrir
+const openDocs = document.getElementById("file-input");
+openDocs.addEventListener("change", leerArchivo, false);
+
+//Proceso para guardar archivos
+
 //Proceso de las creacion de ventanas
 var ctrl_Tabs = 2;
 function addWindow() {
@@ -29,10 +61,8 @@ function addWindow() {
 
   //Creamos el textArea del tab
   let new_TextArea = document.createElement("div");
-  new_TextArea.setAttribute(
-    "style",
-    "width: 722px; height: 270px; position: absolute;"
-  );
+  new_TextArea.setAttribute("class", "list-group");
+  new_TextArea.setAttribute("style", "height: 270px; position: relative;");
   new_TextArea.setAttribute("id", "txt" + ctrl_Tabs);
 
   //Le agremaos el text area al tab
@@ -55,8 +85,6 @@ function addWindow() {
 function addTable() {
   //Obtenemos la tabla
   let table = document.getElementById("table_var");
-  //Limpiamos la tabla
-  $(table).empty();
   for (let i = 0; i < ListaVariables.length; i++) {
     //Creamos el nuevo renglon
     let tr = document.createElement("tr");
@@ -93,13 +121,43 @@ function changeTab(id) {
 
 //Funcion para el proceso RUN
 function run() {
+  //Obtenemos la tabla
+  let table = document.getElementById("table_var");
+  //Limpiamos la tabla
+  $(table).empty();
+  //Seleccionamos el texto de la pestaña seleccionada
   let editor = ace.edit(select_Tab);
   let value_Txt = editor.getSession().getValue();
+  //Empezamos con el analisis lexico
   analisis_Lexico(value_Txt);
-  console.log(Lista_de_Tokens);
-  console.log(Lista_de_Errores);
-  parser();
-  addTable();
+  if (pasoLibre) {
+    console.log(Lista_de_Tokens);
+    console.log(Lista_de_Errores);
+    //Empezamos con el analisis sintactico
+    if (Lista_de_Tokens.length > 0) {
+      parser();
+      if (Error_Sintactico_Permiso) {
+        //Creamos la tabla de variables
+        addTable();
+      } else {
+        ErrorAnalisis("Existen errores sintacticos");
+      }
+    }
+  } else {
+    ErrorAnalisis("Existen errores lexicos");
+  }
+}
+
+//Proceso de errores
+function ErrorAnalisis(alerta) {
+  //Obtenemos la modal_alert
+  let modal = document.getElementById("modal_alert");
+  //Limpiamos la modal_alert
+  $(modal).empty();
+  //Creamos el texto de la alerta
+  let aux_Alerta = document.createTextNode(alerta);
+  modal.appendChild(aux_Alerta);
+  $("#alertModal").modal("show");
 }
 
 //Proceso de analisis lexico
@@ -842,7 +900,7 @@ function parser() {
   indice = 0;
   tokenActual = Lista_de_Tokens[indice];
   errorSintactico = false;
-  case_inicial = true;
+  Error_Sintactico_Permiso = true;
 
   //Llamada al no terminal inicial
   Inicio();
@@ -908,16 +966,72 @@ function Sentencias() {
   Ciclos();
 }
 
+//Variable que sirve para saber que es un ciclo
+var esCiclo = 0;
 function Ciclos() {
-  //<Ciclos> -> for (<Dec> = <Expresion>; <Expresion> ; <Alter>) { <Sentencias> }
-  //         | while ( <Expresion> <SimboloComparacion> <Expresion>) { <Inicio> }
+  //<Ciclos> -> <For>
+  //         | <While>
+  //         | <Do_While>
   if (tokenActual.Tipo === "Reservada for") {
+    esCiclo++;
     Ciclo_For();
     Sentencias();
+    esCiclo--;
   } else if (tokenActual.Tipo === "Reservada while") {
+    esCiclo++;
     Ciclo_While();
     Sentencias();
+    esCiclo--;
+  } else if (tokenActual.Tipo === "Reservada do") {
+    esCiclo++;
+    Ciclo_Do_While();
+    Sentencias();
+    esCiclo--;
   }
+}
+
+function Continue() {
+  //Si viene o no el continue
+  if (tokenActual.Tipo === "Reservada continue") {
+    emparejar("Reservada continue");
+    emparejar("Punto y coma");
+  }
+}
+
+function Break() {
+  //Si viene o no el break
+  if (tokenActual.Tipo === "Reservada break") {
+    emparejar("Reservada break");
+    emparejar("Punto y coma");
+  }
+}
+
+function Ciclo_Do_While() {
+  //<Do_While> -> Do { <Sentencias> } while ( <Expresion> ) ;
+  valorVariable = "";
+  emparejar("Reservada do");
+  emparejar("Llave izquierda");
+  Sentencias();
+  Break();
+  emparejar("Llave derecha");
+  emparejar("Reservada while");
+  emparejar("Parentesis izquierdo");
+  Expresiones();
+  emparejar("Parentesis derecho");
+  emparejar("Punto y coma");
+}
+
+function Ciclo_While() {
+  //<While> -> while ( <Expresion> ) { <Sentencias> }
+  valorVariable = "";
+  emparejar("Reservada while");
+  emparejar("Parentesis izquierdo");
+  Expresiones();
+  emparejar("Parentesis derecho");
+  emparejar("Llave izquierda");
+  Sentencias();
+  Break();
+  emparejar("Llave derecha");
 }
 
 function Ciclo_For() {
@@ -931,6 +1045,7 @@ function Ciclo_For() {
   emparejar("Parentesis derecho");
   emparejar("Llave izquierda");
   Sentencias();
+  Break();
   emparejar("Llave derecha");
 }
 
@@ -1021,6 +1136,10 @@ function If() {
   Sentencias();
   if (tokenActual.Tipo === "Reservada return") {
     Return();
+  } else if (tokenActual.Tipo === "Reservada break" && esCiclo > 0) {
+    Break();
+  } else if (tokenActual.Tipo === "Reservada continue" && esCiclo > 0) {
+    Continue();
   }
   emparejar("Llave derecha");
 }
@@ -1047,6 +1166,10 @@ function ElseP() {
     Sentencias();
     if (tokenActual.Tipo === "Reservada return") {
       Return();
+    } else if (tokenActual.Tipo === "Reservada break" && esCiclo > 0) {
+      Break();
+    } else if (tokenActual.Tipo === "Reservada continue" && esCiclo > 0) {
+      Continue();
     }
     emparejar("Llave derecha");
   }

@@ -29,7 +29,8 @@
                 aria-haspopup="true" aria-expanded="false"></button>
               <!--Opciones del menu-->
               <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                <a class="dropdown-item" href="#">Abrir</a>
+                <label for="file-input" class="dropdown-item">Abrir</label>
+                <input type="file" id="file-input" style='display: none;' accept=".cs">
                 <a class="dropdown-item" href="#">Guardar</a>
                 <a class="dropdown-item" href="#">Guardar como...</a>
                 <a class="dropdown-item" href="#" id="btn-window" onclick="addWindow()">Agregar pestaña</a>
@@ -141,7 +142,7 @@
 
   </div>
 
-  <!--Modal-->
+  <!--Modal about-->
   <div class="modal" id="myModal">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -164,6 +165,23 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--Modal alert-->
+  <div class="modal" id="alertModal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content alert alert-danger">
+        <div class="modal-header">
+          <h5 class="modal-title">Alerta</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="modal_alert"></p>
         </div>
       </div>
     </div>
