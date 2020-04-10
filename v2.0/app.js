@@ -6,22 +6,31 @@ function leerArchivo(e) {
   if (!archivo) {
     return;
   }
-  console.log(archivo.name);
   var lector = new FileReader();
   lector.onload = function (e) {
     var contenido = e.target.result;
-    mostrarContenido(contenido);
+    mostrarContenido(contenido, archivo.name);
   };
   lector.readAsText(archivo);
 }
 
-function mostrarContenido(contenido) {
+function mostrarContenido(contenido, name) {
   //Creamos la pestaña
   addWindow();
   //Seleccionamos el texto de la pestaña seleccionada
   let editor = ace.edit("txt" + (ctrl_Tabs - 1));
   //Le asignamos lo leido
   editor.getSession().setValue(contenido);
+  //Guardamos en nuestra lista de archivos abiertos
+  addFilesOpen("txt" + (ctrl_Tabs - 1), name);
+}
+
+//Funcion para añadir a la lista de tokens
+function addFilesOpen(tab, nombre) {
+  Archivos_Abiertos.push({
+    Tab: tab,
+    Nombre: nombre,
+  });
 }
 
 //Le asignamos el metodo al boton de abrir
@@ -29,6 +38,65 @@ const openDocs = document.getElementById("file-input");
 openDocs.addEventListener("change", leerArchivo, false);
 
 //Proceso para guardar archivos
+function saveFiles() {
+  let existFile = false;
+  let aux_Nombre = "";
+  for (let i = 0; i < Archivos_Abiertos.length; i++) {
+    if (select_Tab === Archivos_Abiertos[i].Tab) {
+      existFile = true;
+      aux_Nombre = Archivos_Abiertos[i].Nombre;
+    }
+  }
+  //Seleccionamos el texto de la pestaña seleccionada
+  let editor = ace.edit(select_Tab);
+  let value_Txt = editor.getSession().getValue();
+  if (existFile) {
+    saveDocument(value_Txt, aux_Nombre);
+  } else {
+    $("#modal-save").modal("show");
+  }
+}
+
+function saveDocument(value_Txt, aux_Nombre) {
+  let file = new File([value_Txt], aux_Nombre, {
+    type: "text/plain;charset=utf-8",
+  });
+  // obtienes una URL para el fichero que acabas de crear
+  var url = window.URL.createObjectURL(file);
+  // creas un enlace y lo añades al documento
+  var a = document.createElement("a");
+  document.body.appendChild(a);
+  a.style = "display: none";
+
+  // actualizas los parámetros del enlace para descargar el fichero creado
+  a.href = url;
+  a.download = file.name;
+  a.onclick = destroyClickedElement;
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
+
+function destroyClickedElement(event) {
+  // remove the link from the DOM
+  document.body.removeChild(event.target);
+}
+
+//Proceso guardar como
+function SaveAs() {
+  let aux_Nombre = document.getElementById("nombre-file").value;
+  let editor = ace.edit(select_Tab);
+  let value_Txt = editor.getSession().getValue();
+  saveDocument(value_Txt, aux_Nombre);
+  $("#modal-save").modal("hide");
+  document.getElementById("nombre-file").value = "text.cs";
+}
+
+//Funcion para abrir archivos en el navegador
+function openFiles(file) {
+  // obtienes una URL para el fichero que acabas de crear
+  var url = window.URL.createObjectURL(file);
+  window.open(url, "Download");
+}
 
 //Proceso de las creacion de ventanas
 var ctrl_Tabs = 2;
@@ -663,6 +731,7 @@ function analisis_Lexico(entrada) {
           columna = 0;
           fila++;
           estado = 13;
+          lexema += "\n";
         } else if (c != "*") {
           lexema += c;
           estado = 13;
@@ -901,9 +970,12 @@ function parser() {
   tokenActual = Lista_de_Tokens[indice];
   errorSintactico = false;
   Error_Sintactico_Permiso = true;
-
+  //Codigo traducido python
+  Contador_Tabs_Python = 0;
+  Codigo_Python = "";
   //Llamada al no terminal inicial
   Inicio();
+  console.log(Codigo_Python);
 }
 
 function Inicio() {
@@ -940,6 +1012,7 @@ function Inicio() {
 //                  | <Declaracion_Var>
 function Declaracion_Cont() {
   Lista_Declaracion();
+  //Codigo_Python += "\n";
   Metodos();
   ComentariosMet();
 }
@@ -948,6 +1021,7 @@ var mainPerm = true;
 function Metodos() {
   if (tokenActual.Tipo === "Reservada void") {
     emparejar("Reservada void");
+    Codigo_Python += "def ";
     if (mainPerm && tokenActual.Tipo === "Reservada main") {
       Main();
       Declaracion_Cont();
@@ -993,6 +1067,10 @@ function Ciclos() {
 function Continue() {
   //Si viene o no el continue
   if (tokenActual.Tipo === "Reservada continue") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
+    Codigo_Python += "continue\n";
     emparejar("Reservada continue");
     emparejar("Punto y coma");
   }
@@ -1001,6 +1079,10 @@ function Continue() {
 function Break() {
   //Si viene o no el break
   if (tokenActual.Tipo === "Reservada break") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
+    Codigo_Python += "break\n";
     emparejar("Reservada break");
     emparejar("Punto y coma");
   }
@@ -1064,9 +1146,13 @@ function Condicionales() {
   //                 | <Switch> <Sentencias>
   //                 | Epsilon
   if (tokenActual.Tipo === "Reservada if") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
     If();
     Else();
     Sentencias();
+    Codigo_Python += "\n";
   } else if (tokenActual.Tipo === "Reservada switch") {
     Switch();
     Sentencias();
@@ -1126,12 +1212,15 @@ function Default() {
 function If() {
   //<If> -> if ( <Expresiones> ) { <Sentencias> }
   //El condicional encontrado es el IF
+  valorVariable = "";
   emparejar("Reservada if");
   emparejar("Parentesis izquierdo");
   //Condicional que hace cumplir o no el if
   Expresiones();
   emparejar("Parentesis derecho");
   emparejar("Llave izquierda");
+  Codigo_Python += "if " + valorVariable + ":\n";
+  Contador_Tabs_Python++;
   //Codigo del bloque del if
   Sentencias();
   if (tokenActual.Tipo === "Reservada return") {
@@ -1142,6 +1231,7 @@ function If() {
     Continue();
   }
   emparejar("Llave derecha");
+  Contador_Tabs_Python--;
 }
 
 function Else() {
@@ -1157,10 +1247,16 @@ function Else() {
 function ElseP() {
   //<ElseP> -> <If>
   //       | { <Sentencias> }
+  for (let j = 0; j < Contador_Tabs_Python; j++) {
+    Codigo_Python += "  ";
+  }
   if (tokenActual.Tipo === "Reservada if") {
+    Codigo_Python += "el";
     If();
     Else();
   } else {
+    Codigo_Python += "else:\n";
+    Contador_Tabs_Python++;
     emparejar("Llave izquierda");
     //Codigo del bloque del if
     Sentencias();
@@ -1171,16 +1267,23 @@ function ElseP() {
     } else if (tokenActual.Tipo === "Reservada continue" && esCiclo > 0) {
       Continue();
     }
+    Contador_Tabs_Python--;
     emparejar("Llave derecha");
   }
 }
 
 function Return() {
+  valorVariable = "";
+  for (let j = 0; j < Contador_Tabs_Python; j++) {
+    Codigo_Python += "  ";
+  }
   emparejar("Reservada return");
   if (tokenActual.Tipo != "Punto y coma") {
     Expresiones();
+    Codigo_Python += "return " + valorVariable + "\n";
     emparejar("Punto y coma");
   } else {
+    Codigo_Python += "return " + "\n";
     emparejar("Punto y coma");
   }
 }
@@ -1195,6 +1298,10 @@ function Imprimir() {
     emparejar("Parentesis izquierdo");
     //Expresion a imprimir
     Expresiones();
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
+    Codigo_Python += "print(" + valorVariable + ")" + "\n";
     emparejar("Parentesis derecho");
     emparejar("Punto y coma");
     Sentencias();
@@ -1230,6 +1337,10 @@ function Declaracion_Var() {
     //Esto es por si puede ser una funcion
     if (cont_Var === 1 && tokenActual.Tipo === "Parentesis izquierdo") {
       emparejar("Parentesis izquierdo");
+      //Aqui esta la traduccion para funciones
+      //-------------------------------------------------
+      Codigo_Python += "def " + Lista_Var_Python[0].Lexema + " (";
+      Contador_Tabs_Python++;
       if (tokenActual.Tipo != "Parentesis derecho") {
         Parametros();
         emparejar("Parentesis derecho");
@@ -1237,16 +1348,20 @@ function Declaracion_Var() {
         emparejar("Parentesis derecho");
       }
       emparejar("Llave izquierda");
+      Codigo_Python += "):" + "\n";
       Sentencias();
       emparejar("Reservada return");
       Expresiones();
       emparejar("Punto y coma");
       emparejar("Llave derecha");
+      Contador_Tabs_Python--;
+      Codigo_Python += "\n";
     } else {
       Opcion_Asignacion();
       emparejar("Punto y coma");
     }
   } else if (tokenActual.Tipo === "Identificador") {
+    str_Var = "";
     temp_variable = "";
     for (let i = 0; i < ListaVariables.length; i++) {
       if (ListaVariables[i].Identificador === tokenActual.Lexema) {
@@ -1276,6 +1391,7 @@ function Alter() {
 }
 
 function Lista_ID() {
+  Lista_Var_Python = [];
   valorVariable = "";
   //< Lista ID > -> ID(Variable) <Lista ID'>
   if (Lista_de_Tokens[indice + 1].Lexema != "(") {
@@ -1284,6 +1400,7 @@ function Lista_ID() {
     }
     addVar(temp_variable, tokenActual.Lexema, tokenActual.Fila);
   }
+  Lista_Var_Python.push(tokenActual);
   emparejar("Identificador");
   cont_Var++;
   Lista_ID_1();
@@ -1300,6 +1417,7 @@ function Lista_ID_1() {
       }
       addVar(temp_variable, tokenActual.Lexema, tokenActual.Fila);
     }
+    Lista_Var_Python.push(tokenActual);
     emparejar("Identificador");
     cont_Var++;
     Lista_ID_1();
@@ -1320,7 +1438,14 @@ var ListaVariables = [];
 
 var tipo_variable = 0;
 var temp_variable = "";
+
+//lista de variables python
+var Lista_Var_Python = [];
+
+//Var si fue declarado
+var str_Var = "";
 function Asignacion_de_Tipo() {
+  str_Var = "var ";
   if (tokenActual.Tipo === "Reservada int") {
     //<Declaracion_Var> -> int <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     emparejar("Reservada int");
@@ -1367,10 +1492,10 @@ function Asignacion_de_Tipo() {
 var valorVariable = "";
 
 function Opcion_Asignacion() {
+  valorVariable = "";
   if (tokenActual.Tipo === "Signo igual") {
     //<Opcion_de_Asignacion> -> Igual(=) <Expresion>
     emparejar("Signo igual");
-    valorVariable = "";
     Expresiones();
   } else {
     if (tipo_variable == 1) {
@@ -1388,6 +1513,17 @@ function Opcion_Asignacion() {
     }
     //<Opcion_de_Asignacion> -> Epsilon
     //Si viene epsilon quiere decir que no se le agrego un valor a la variable.
+  }
+
+  //Aqui esta la asignacion de variables tipo python -------------------------------------------------
+  for (let i = 0; i < Lista_Var_Python.length; i++) {
+    //Variable para verificar si el tipo alguna vez fue declarado para esa variable
+    //Console.WriteLine(ListaVariables[i].GetValor + " = " + valorVariable);
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
+    Codigo_Python +=
+      str_Var + Lista_Var_Python[i].Lexema + " = " + valorVariable + "\n";
   }
 }
 
@@ -1561,11 +1697,14 @@ function IDP() {
   //Esto es para la asignacion de funciones
   if (tokenActual.Tipo === "Parentesis izquierdo") {
     emparejar("Parentesis izquierdo");
+    valorVariable += "(";
     if (tokenActual.Tipo != "Parentesis derecho") {
       expF();
       emparejar("Parentesis derecho");
+      valorVariable += ")";
     } else {
       emparejar("Parentesis derecho");
+      valorVariable += ")";
     }
   }
 }
@@ -1575,6 +1714,7 @@ function expF() {
   //    | Epsilon
   Expresiones();
   if (tokenActual.Tipo === "Coma") {
+    valorVariable += ", ";
     emparejar("Coma");
     expF();
   }
@@ -1586,24 +1726,32 @@ function Parametros() {
   //    | <Asignacion_de_Tipo> ID ,
   //    | Epsilon
   Asignacion_de_Tipo();
+  Codigo_Python += tokenActual.Lexema;
   emparejar("Identificador");
   if (tokenActual.Tipo === "Coma") {
     emparejar("Coma");
+    Codigo_Python += ", ";
     Parametros();
   }
 }
 
 //Metodo Main
 function Main() {
+  Codigo_Python += "main ():\n";
+  Contador_Tabs_Python++;
   emparejar("Reservada main");
   emparejar("Parentesis izquierdo");
   emparejar("Parentesis derecho");
   emparejar("Llave izquierda");
   Sentencias();
   emparejar("Llave derecha");
+  Contador_Tabs_Python--;
+  Codigo_Python += "\nif __name__ = “__main__”:\n";
+  Codigo_Python += "  main()\n\n";
 }
 
 function Metodo_Void() {
+  Codigo_Python += tokenActual.Lexema + " (";
   emparejar("Identificador");
   emparejar("Parentesis izquierdo");
   if (tokenActual.Tipo != "Parentesis derecho") {
@@ -1612,6 +1760,8 @@ function Metodo_Void() {
   } else {
     emparejar("Parentesis derecho");
   }
+  Codigo_Python += "): \n";
+  Contador_Tabs_Python++;
   emparejar("Llave izquierda");
   Sentencias();
   //Por si viene el return
@@ -1620,6 +1770,8 @@ function Metodo_Void() {
     emparejar("Punto y coma");
   }
   emparejar("Llave derecha");
+  Contador_Tabs_Python--;
+  Codigo_Python += "\n";
 }
 
 function Comentarios() {

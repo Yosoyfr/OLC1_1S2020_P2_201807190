@@ -31,8 +31,8 @@
               <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
                 <label for="file-input" class="dropdown-item">Abrir</label>
                 <input type="file" id="file-input" style='display: none;' accept=".cs">
-                <a class="dropdown-item" href="#">Guardar</a>
-                <a class="dropdown-item" href="#">Guardar como...</a>
+                <a class="dropdown-item" href="#" onclick="saveFiles()" id="save-file">Guardar</a>
+                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modal-save">Guardar como...</a>
                 <a class="dropdown-item" href="#" id="btn-window" onclick="addWindow()">Agregar pestaña</a>
               </div>
             </div>
@@ -186,6 +186,31 @@
       </div>
     </div>
   </div>
+
+  <!--Modal save ass-->
+  <div class="modal" id="modal-save">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Guardar como...</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="col-form-label" for="nombre-file">Escriba el nombre del archivo con su extension:</label>
+            <input type="text" class="form-control" value="text.cs" id="nombre-file">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="SaveAs()">Save changes</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="ace-builds-master/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
   <script>
     var editor = ace.edit("txt1");
