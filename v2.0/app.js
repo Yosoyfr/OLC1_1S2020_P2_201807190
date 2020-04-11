@@ -1091,6 +1091,11 @@ function Break() {
 function Ciclo_Do_While() {
   //<Do_While> -> Do { <Sentencias> } while ( <Expresion> ) ;
   valorVariable = "";
+  for (let j = 0; j < Contador_Tabs_Python; j++) {
+    Codigo_Python += "  ";
+  }
+  Codigo_Python += "while True:" + "\n";
+  Contador_Tabs_Python++;
   emparejar("Reservada do");
   emparejar("Llave izquierda");
   Sentencias();
@@ -1099,36 +1104,71 @@ function Ciclo_Do_While() {
   emparejar("Reservada while");
   emparejar("Parentesis izquierdo");
   Expresiones();
+  for (let j = 0; j < Contador_Tabs_Python; j++) {
+    Codigo_Python += "  ";
+  }
+  Codigo_Python += "if (" + valorVariable + "):\n";
+  Contador_Tabs_Python++;
+  for (let j = 0; j < Contador_Tabs_Python; j++) {
+    Codigo_Python += "  ";
+  }
+  Codigo_Python += "break\n";
+  Contador_Tabs_Python--;
   emparejar("Parentesis derecho");
   emparejar("Punto y coma");
+  Contador_Tabs_Python--;
 }
 
 function Ciclo_While() {
   //<While> -> while ( <Expresion> ) { <Sentencias> }
   valorVariable = "";
+  for (let j = 0; j < Contador_Tabs_Python; j++) {
+    Codigo_Python += "  ";
+  }
   emparejar("Reservada while");
   emparejar("Parentesis izquierdo");
   Expresiones();
+  Codigo_Python += "while " + valorVariable + " :\n";
+  Contador_Tabs_Python++;
   emparejar("Parentesis derecho");
   emparejar("Llave izquierda");
   Sentencias();
   Break();
   emparejar("Llave derecha");
+  Contador_Tabs_Python--;
 }
 
+//Variables para el for
+var for_var = "";
+var for_Range = [];
+var lenght_Var_For = 0;
 function Ciclo_For() {
   //<For> -> for ( <Declaracion> ; <Expresion> ;  Alter) { <Sentencias> }
+  for (let j = 0; j < Contador_Tabs_Python; j++) {
+    Codigo_Python += "  ";
+  }
+  //Reiniciamos el rango
+  for_Range = [];
+  Codigo_Python += "for ";
   emparejar("Reservada for");
   emparejar("Parentesis izquierdo");
   Declaracion_Var();
+  Codigo_Python = Codigo_Python.substring(
+    0,
+    Codigo_Python.length - lenght_Var_For
+  );
+  Codigo_Python += for_var + " in range (";
   Expresiones();
   emparejar("Punto y coma");
   Alter_Ciclos();
   emparejar("Parentesis derecho");
   emparejar("Llave izquierda");
+  Codigo_Python += Number(for_Range[0]) + 1 + ", " + for_Range[1] + "):\n";
+  Contador_Tabs_Python++;
   Sentencias();
   Break();
   emparejar("Llave derecha");
+  Contador_Tabs_Python--;
 }
 
 function Alter_Ciclos() {
@@ -1152,8 +1192,11 @@ function Condicionales() {
     If();
     Else();
     Sentencias();
-    Codigo_Python += "\n";
+    //Codigo_Python += "\n";
   } else if (tokenActual.Tipo === "Reservada switch") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
     Switch();
     Sentencias();
   }
@@ -1163,25 +1206,45 @@ function Switch() {
   //<Switch> -> switch ( ID ) { <Cases> <Defaul> }
   emparejar("Reservada switch");
   emparejar("Parentesis izquierdo");
+  Codigo_Python += "def switch (case, " + tokenActual.Lexema + "):\n";
+  Contador_Tabs_Python++;
   emparejar("Identificador");
   emparejar("Parentesis derecho");
   emparejar("Llave izquierda");
+  for (let j = 0; j < Contador_Tabs_Python; j++) {
+    Codigo_Python += "  ";
+  }
+  Codigo_Python += "switcher = {" + "\n";
+  Contador_Tabs_Python++;
   Cases();
   Default();
   emparejar("Llave derecha");
+  Contador_Tabs_Python--;
+  for (let j = 0; j < Contador_Tabs_Python; j++) {
+    Codigo_Python += "  ";
+  }
+  Codigo_Python += "}" + "\n";
+  Contador_Tabs_Python--;
 }
 
 function Cases() {
   //<Cases> -> case numero : <CasesP>
   //        | Epsilon
   if (tokenActual.Tipo === "Reservada case") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
     emparejar("Reservada case");
+    Codigo_Python += tokenActual.Lexema + ":";
+    aux_Default = tokenActual.Lexema;
     emparejar("Numero");
     emparejar("Dos puntos");
     CasesP();
   }
 }
 
+//Variable auxiliar del default
+var aux_Default = 0;
 function CasesP() {
   //<Cases> -> <Cases>
   //        | <Sentencias> break ;
@@ -1192,6 +1255,8 @@ function CasesP() {
     Sentencias();
     emparejar("Reservada break");
     emparejar("Punto y coma");
+    Codigo_Python = Codigo_Python.slice(0, -1);
+    Codigo_Python += ", " + "\n";
     Cases();
   }
 }
@@ -1200,12 +1265,19 @@ function Default() {
   //<Default> -> default : <Sentencias> break ;
   //        | Epsilon
   if (tokenActual.Tipo === "Reservada default") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
+    let aux_number = Number(aux_Default) + 1;
+    Codigo_Python += aux_number + ":";
     emparejar("Reservada default");
     emparejar("Dos puntos");
     //Codigo del bloque del default
     Sentencias();
     emparejar("Reservada break");
     emparejar("Punto y coma");
+    Codigo_Python = Codigo_Python.slice(0, -1);
+    Codigo_Python += ", " + "\n";
   }
 }
 
@@ -1347,11 +1419,15 @@ function Declaracion_Var() {
       } else {
         emparejar("Parentesis derecho");
       }
-      emparejar("Llave izquierda");
       Codigo_Python += "):" + "\n";
+      emparejar("Llave izquierda");
       Sentencias();
       emparejar("Reservada return");
       Expresiones();
+      for (let j = 0; j < Contador_Tabs_Python; j++) {
+        Codigo_Python += "  ";
+      }
+      Codigo_Python += "return " + valorVariable + "\n";
       emparejar("Punto y coma");
       emparejar("Llave derecha");
       Contador_Tabs_Python--;
@@ -1401,6 +1477,7 @@ function Lista_ID() {
     addVar(temp_variable, tokenActual.Lexema, tokenActual.Fila);
   }
   Lista_Var_Python.push(tokenActual);
+  for_var = tokenActual.Lexema;
   emparejar("Identificador");
   cont_Var++;
   Lista_ID_1();
@@ -1519,11 +1596,14 @@ function Opcion_Asignacion() {
   for (let i = 0; i < Lista_Var_Python.length; i++) {
     //Variable para verificar si el tipo alguna vez fue declarado para esa variable
     //Console.WriteLine(ListaVariables[i].GetValor + " = " + valorVariable);
+    let aux_Var_P = "";
     for (let j = 0; j < Contador_Tabs_Python; j++) {
-      Codigo_Python += "  ";
+      aux_Var_P += "  ";
     }
-    Codigo_Python +=
+    aux_Var_P +=
       str_Var + Lista_Var_Python[i].Lexema + " = " + valorVariable + "\n";
+    lenght_Var_For = aux_Var_P.length;
+    Codigo_Python += aux_Var_P;
   }
 }
 
@@ -1620,12 +1700,12 @@ function KP() {
     F();
     KP();
   } else if (tokenActual.Tipo === "And") {
-    valorVariable += "&&";
+    valorVariable += " and ";
     emparejar("And");
     F();
     KP();
   } else if (tokenActual.Tipo === "Or") {
-    valorVariable += "||";
+    valorVariable += " or ";
     emparejar("Or");
     F();
     KP();
@@ -1641,6 +1721,9 @@ function F() {
 
   if (tokenActual.Tipo === "Numero") {
     valorVariable += tokenActual.Lexema;
+    if (esCiclo > 0) {
+      for_Range.push(tokenActual.Lexema);
+    }
     emparejar("Numero");
   } else if (tokenActual.Tipo === "Cadena") {
     valorVariable += tokenActual.Lexema;
@@ -1668,7 +1751,7 @@ function NotF() {
   //Comparamos si puede venir un not o si no
   if (tokenActual.Tipo === "Not") {
     emparejar("Not");
-    valorVariable += "!";
+    valorVariable += " not ";
   }
   //Despues los tipos de variables que pueden recibir el not
   if (tokenActual.Tipo === "Parentesis izquierdo") {
@@ -1844,6 +1927,7 @@ function emparejar(tip) {
             tokenActual.Fila +
             "]"
         );
+        Error_Sintactico_Permiso = false;
         errorSintactico = true;
       }
     }
