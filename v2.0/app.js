@@ -207,6 +207,10 @@ function run() {
       if (Error_Sintactico_Permiso) {
         //Creamos la tabla de variables
         addTable();
+        //Obteneos la traduccion
+        var Console_ = ace.edit("console");
+        //Le asignamos lo leido
+        Console_.getSession().setValue(Codigo_Python);
       } else {
         ErrorAnalisis("Existen errores sintacticos");
       }
@@ -975,7 +979,6 @@ function parser() {
   Codigo_Python = "";
   //Llamada al no terminal inicial
   Inicio();
-  console.log(Codigo_Python);
 }
 
 function Inicio() {
@@ -1859,9 +1862,21 @@ function Metodo_Void() {
 
 function Comentarios() {
   if (tokenActual.Tipo === "Comentario de linea") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
+    Codigo_Python +=
+      "# " + tokenActual.Lexema.substring(2, tokenActual.Lexema.length);
     emparejar("Comentario de linea");
     Sentencias();
   } else if (tokenActual.Tipo === "Comentario multilinea") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
+    Codigo_Python +=
+      '"" ' +
+      tokenActual.Lexema.substring(2, tokenActual.Lexema.length - 2) +
+      ' ""\n';
     emparejar("Comentario multilinea");
     Sentencias();
   }
@@ -1869,9 +1884,21 @@ function Comentarios() {
 
 function ComentariosGlobales() {
   if (tokenActual.Tipo === "Comentario de linea") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
+    Codigo_Python +=
+      "# " + tokenActual.Lexema.substring(2, tokenActual.Lexema.length);
     emparejar("Comentario de linea");
     ComentariosGlobales();
   } else if (tokenActual.Tipo === "Comentario multilinea") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
+    Codigo_Python +=
+      '"" ' +
+      tokenActual.Lexema.substring(2, tokenActual.Lexema.length - 2) +
+      ' ""\n';
     emparejar("Comentario multilinea");
     ComentariosGlobales();
   }
@@ -1879,9 +1906,21 @@ function ComentariosGlobales() {
 
 function ComentariosMet() {
   if (tokenActual.Tipo === "Comentario de linea") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
+    Codigo_Python +=
+      "# " + tokenActual.Lexema.substring(2, tokenActual.Lexema.length);
     emparejar("Comentario de linea");
     Declaracion_Cont();
   } else if (tokenActual.Tipo === "Comentario multilinea") {
+    for (let j = 0; j < Contador_Tabs_Python; j++) {
+      Codigo_Python += "  ";
+    }
+    Codigo_Python +=
+      '"" ' +
+      tokenActual.Lexema.substring(2, tokenActual.Lexema.length - 2) +
+      ' ""\n';
     emparejar("Comentario multilinea");
     Declaracion_Cont();
   }
@@ -1942,3 +1981,260 @@ function addVar(tipo, id, fila) {
     Fila: fila,
   });
 }
+
+//Proceso para la lectura de cadenas HTML
+function readHTML() {
+  var html_ =
+    '<html><head><title>Example 1</title></head><body style="background: skyblue"><h2>[OLC1]Practica 2</h2><p>Si<br>sale<br>compi<br>1<br>:)<br>html sin errores..!!!</p></body></html>';
+  analisis_html(html_);
+  console.log(Lista_tokens_HTML);
+}
+
+//Funcion analisis html
+var Lista_tokens_HTML = [];
+function analisis_html(entrada) {
+  //Inicializamos las listas
+  Lista_tokens_HTML = [];
+  let estado = 0;
+  let columna = 0;
+  let fila = 1;
+  let lexema = "";
+  let c = "";
+  entrada = entrada + " ";
+  //Empezamos el analisis
+  for (let i = 0; i < entrada.length; i++) {
+    c = entrada[i];
+    columna++;
+    switch (estado) {
+      case 0:
+        //Revisara si puede ser una etique o algun texto
+        if (isLetter(c)) {
+          estado = 1;
+          lexema += c;
+        }
+        //Revisara si puede ser un espacio en blanco
+        else if (c === " ") {
+          estado = 0;
+        }
+        //Revisara si puede ser un enter, para cambiar de linea
+        else if (c === "\n") {
+          columna = 0;
+          fila++;
+          estado = 0;
+        }
+
+        //Lista de Tokens ya establecidos que son todos los simbolos admitidos
+        else if (c === "<") {
+          lexema += c;
+          addToken_HTML("i_etiqueta", lexema, fila, columna);
+          lexema = "";
+        } else if (c === ">") {
+          lexema += c;
+          addToken_HTML("f_etiqueta", lexema, fila, columna);
+          lexema = "";
+          estado = -1;
+        } else if (c === "/") {
+          lexema += c;
+          addToken_HTML("diagonal", lexema, fila, columna);
+          lexema = "";
+        } else if (c === "=") {
+          lexema += c;
+          addToken_HTML("igual", lexema, fila, columna);
+          lexema = "";
+        } else if (c === '"') {
+          lexema += c;
+          addToken_HTML("comillas", lexema, fila, columna);
+          lexema = "";
+        } else if (c === ":") {
+          lexema += c;
+          addToken_HTML("dos puntos", lexema, fila, columna);
+          lexema = "";
+        }
+        //Si no es ninguno de la lista de tokens es un plain text
+        else {
+          estado = -1;
+          i--;
+          columna--;
+        }
+        break;
+      case 1:
+        //Buscara que palabra reservada es
+        if (isLetterOrDigit(c)) {
+          lexema += c;
+          estado = 1;
+        } else if (lexema === "html") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("html", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "head") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("head", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "body") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("body", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "title") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("title", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "div") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("div", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "br") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("br", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "p") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("p", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "h1") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("h1", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "h2") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("h2", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "h3") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("h3", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "h4") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("h4", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "button") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("button", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "label") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("label", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "else") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("input", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "style") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("style", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "background") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("background", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "yellow") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("color", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "green") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("color", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "blue") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("color", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "red") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("color", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "white") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("color", lexema, fila, columna);
+          lexema = "";
+        } else if (lexema === "skyblue") {
+          i--;
+          columna--;
+          estado = 0;
+          addToken_HTML("color", lexema, fila, columna);
+          lexema = "";
+        }
+        //Si no es ninguno de la lista de tokens es un plain text
+        else {
+          i--;
+          columna--;
+          estado = -1;
+        }
+        break;
+      default:
+        //Es texto
+        //Comprobara todos los datos que contendra el texto, hasta encontrar otro (<) para abrir una etiqueta
+        if (c == "\n") {
+          columna = 0;
+          fila++;
+          estado = -1;
+          lexema += c;
+        } else if (c != "<") {
+          lexema += c;
+          estado = -1;
+        } else {
+          i--;
+          columna--;
+          estado = 0;
+          if (lexema != "") {
+            addToken_HTML("text", lexema, fila, columna);
+          }
+          lexema = "";
+        }
+        break;
+    }
+  }
+}
+
+//Funcion para añadir los tokens html
+function addToken_HTML(tipo, lexema, fila, columna) {
+  Lista_tokens_HTML.push({
+    Tipo: tipo,
+    Lexema: lexema,
+    Fila: fila,
+    Columna: columna,
+  });
+}
+
+//Parser del analisis html

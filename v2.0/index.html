@@ -59,6 +59,9 @@
         <li class="nav-item">
           <a class="nav-link" href="#" data-toggle="modal" data-target="#myModal">About</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="readHTML()">Html</a>
+        </li>
       </ul>
     </div>
   </nav>
@@ -84,9 +87,9 @@
       <!--Consola-->
       <div class="col-md-6">
         <div class="card text-white bg-secondary border-primary mb-2">
-          <div class="card-header bg-primary ">Console</div>
+          <div class="card-header bg-primary ">Console: Python</div>
           <div class="card-body">
-            <textarea class="form-control border-secondary" id="exampleTextarea" rows="9" disabled></textarea>
+            <div class="list-group" id="console" style="height: 220px; position: relative;"></div>
           </div>
         </div>
       </div>
@@ -214,10 +217,15 @@
   <script src="ace-builds-master/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
   <script>
     var editor = ace.edit("txt1");
-    //editor.setTheme("ace/theme/idle_fingers");
     editor.setTheme("ace/theme/katzenmilch");
     editor.session.setMode("ace/mode/csharp");
     editor.setFontSize("14px");
+
+    var Console_ = ace.edit("console");
+    Console_.setTheme("ace/theme/katzenmilch");
+    Console_.session.setMode("ace/mode/python");
+    Console_.setFontSize("14px");
+    Console_.textInput.getElement().disabled = true;
   </script>
 
   <script src="app.js"></script>
