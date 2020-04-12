@@ -1874,9 +1874,9 @@ function Comentarios() {
       Codigo_Python += "  ";
     }
     Codigo_Python +=
-      '"" ' +
+      "'''" +
       tokenActual.Lexema.substring(2, tokenActual.Lexema.length - 2) +
-      ' ""\n';
+      "'''\n";
     emparejar("Comentario multilinea");
     Sentencias();
   }
@@ -1896,9 +1896,9 @@ function ComentariosGlobales() {
       Codigo_Python += "  ";
     }
     Codigo_Python +=
-      '"" ' +
+      "'''" +
       tokenActual.Lexema.substring(2, tokenActual.Lexema.length - 2) +
-      ' ""\n';
+      "'''\n";
     emparejar("Comentario multilinea");
     ComentariosGlobales();
   }
@@ -1918,9 +1918,9 @@ function ComentariosMet() {
       Codigo_Python += "  ";
     }
     Codigo_Python +=
-      '"" ' +
+      "'''" +
       tokenActual.Lexema.substring(2, tokenActual.Lexema.length - 2) +
-      ' ""\n';
+      "'''\n";
     emparejar("Comentario multilinea");
     Declaracion_Cont();
   }
@@ -1980,14 +1980,6 @@ function addVar(tipo, id, fila) {
     Identificador: id,
     Fila: fila,
   });
-}
-
-//Proceso para la lectura de cadenas HTML
-function readHTML() {
-  var html_ =
-    '<html><head><title>Example 1</title></head><body style="background: skyblue"><h2>[OLC1]Practica 2</h2><p>Si<br>sale<br>compi<br>1<br>:)<br>html sin errores..!!!</p></body></html>';
-  analisis_html(html_);
-  console.log(Lista_tokens_HTML);
 }
 
 //Funcion analisis html
@@ -2108,25 +2100,25 @@ function analisis_html(entrada) {
           i--;
           columna--;
           estado = 0;
-          addToken_HTML("h1", lexema, fila, columna);
+          addToken_HTML("h", lexema, fila, columna);
           lexema = "";
         } else if (lexema === "h2") {
           i--;
           columna--;
           estado = 0;
-          addToken_HTML("h2", lexema, fila, columna);
+          addToken_HTML("h", lexema, fila, columna);
           lexema = "";
         } else if (lexema === "h3") {
           i--;
           columna--;
           estado = 0;
-          addToken_HTML("h3", lexema, fila, columna);
+          addToken_HTML("h", lexema, fila, columna);
           lexema = "";
         } else if (lexema === "h4") {
           i--;
           columna--;
           estado = 0;
-          addToken_HTML("h4", lexema, fila, columna);
+          addToken_HTML("h", lexema, fila, columna);
           lexema = "";
         } else if (lexema === "button") {
           i--;
@@ -2140,7 +2132,7 @@ function analisis_html(entrada) {
           estado = 0;
           addToken_HTML("label", lexema, fila, columna);
           lexema = "";
-        } else if (lexema === "else") {
+        } else if (lexema === "input") {
           i--;
           columna--;
           estado = 0;
@@ -2237,4 +2229,190 @@ function addToken_HTML(tipo, lexema, fila, columna) {
   });
 }
 
+//Proceso de analisis sintactico html
+var indice_html = 0;
+var token_html;
 //Parser del analisis html
+function parserHtml() {
+  //Reiniamos todos los valores
+  indice_html = 0;
+  token_html = Lista_tokens_HTML[indice_html];
+  error_Html = false;
+  //Vamos a añadir un ultimo token para saber donde termina
+  addToken_HTML("Ultimo", "Ultimo", "0", "0");
+  emparejar_Html("i_etiqueta");
+  emparejar_Html("html");
+  emparejar_Html("f_etiqueta");
+  I_HTML();
+  emparejar_Html("i_etiqueta");
+  emparejar_Html("diagonal");
+  emparejar_Html("html");
+  emparejar_Html("f_etiqueta");
+}
+
+function I_HTML() {
+  Head_Html();
+  Body_Html();
+}
+
+function Head_Html() {
+  if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
+    if (Lista_tokens_HTML[indice_html + 1].Tipo === "head") {
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("head");
+      emparejar_Html("f_etiqueta");
+      Title_Html();
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("diagonal");
+      emparejar_Html("head");
+      emparejar_Html("f_etiqueta");
+    }
+  }
+}
+
+function Title_Html() {
+  if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
+    if (Lista_tokens_HTML[indice_html + 1].Tipo === "title") {
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("title");
+      emparejar_Html("f_etiqueta");
+      while (token_html.Tipo === "text") {
+        emparejar_Html("text");
+      }
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("diagonal");
+      emparejar_Html("title");
+      emparejar_Html("f_etiqueta");
+    }
+  }
+}
+
+function Body_Html() {
+  if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
+    if (Lista_tokens_HTML[indice_html + 1].Tipo === "body") {
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("body");
+      Style_Html();
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("diagonal");
+      emparejar_Html("body");
+      emparejar_Html("f_etiqueta");
+    }
+  }
+}
+
+function Style_Html() {
+  if (Lista_tokens_HTML[indice_html].Tipo === "style") {
+    emparejar_Html("style");
+    emparejar_Html("igual");
+    emparejar_Html("comillas");
+    emparejar_Html("background");
+    emparejar_Html("dos puntos");
+    emparejar_Html("color");
+    emparejar_Html("comillas");
+  }
+}
+
+function Etiquetas() {
+  if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
+    if (Lista_tokens_HTML[indice_html + 1].Tipo === "div") {
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("div");
+      Style_Html();
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("diagonal");
+      emparejar_Html("div");
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "p") {
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("p");
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("diagonal");
+      emparejar_Html("p");
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "button") {
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("button");
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("diagonal");
+      emparejar_Html("button");
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "label") {
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("label");
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("diagonal");
+      emparejar_Html("label");
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "h") {
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("h");
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("diagonal");
+      emparejar_Html("h");
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "input") {
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("input");
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "br") {
+      emparejar_Html("i_etiqueta");
+      emparejar_Html("br");
+      emparejar_Html("f_etiqueta");
+      Etiquetas();
+    }
+  } else if (Lista_tokens_HTML[indice_html].Tipo === "text") {
+    emparejar_Html("text");
+    Etiquetas();
+  }
+}
+
+//Emparejar html
+var error_Html = false;
+
+function emparejar_Html(tip) {
+  if (!error_Html && token_html.Tipo != "Ultimo") {
+    //console.log(tip);
+    if (tip === token_html.Tipo) {
+      indice_html++;
+      token_html = Lista_tokens_HTML[indice_html];
+    } else {
+      console.log(token_html);
+      error_Html = true;
+    }
+  }
+}
+
+//Proceso para la lectura de cadenas HTML
+function readHTML() {
+  var html_ =
+    '<html><head><title>Example 1</title></head><body style="background: skyblue"><h2>[OLC1]Practica 2</h2><p>Si<br>sale<br>compi<br>1<br>:)<br>html sin errores..!!!</p></body></html>';
+  var html_1 =
+    '<html><head><title>Mi pagina</title></head><body style="background:yellow"><h1>[OLC1] Practica 1</h1><div style="background:white"><h2>Encabezado h2</h2><p>Este es un bloque<br>de texto, para una <br>prueba.</p><br></div><div style="background:skyblue"><h2>Llenar los campos</h2><label>Ingrese su nombre:</label><br><input><br><button>Mi boton</button><br></div></body></html>';
+  analisis_html(html_1);
+  console.log(Lista_tokens_HTML);
+  parserHtml();
+  if (!error_Html) {
+    console.log("Html bien");
+  } else {
+    console.log("Html malo");
+  }
+}
