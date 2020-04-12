@@ -195,6 +195,7 @@ function run() {
   file_html = null;
   file_python = null;
   file_json = null;
+  html_print = "";
   //Obtenemos la tabla
   let table = document.getElementById("table_var");
   //Limpiamos la tabla
@@ -1386,7 +1387,7 @@ function Imprimir() {
     emparejar("Parentesis izquierdo");
     //Expresion a imprimir
     if (tokenActual.Tipo === "Cadena html") {
-      html_print = tokenActual.Lexema.substring(
+      html_print += tokenActual.Lexema.substring(
         1,
         tokenActual.Lexema.length - 1
       );
@@ -2001,605 +2002,6 @@ function addVar(tipo, id, fila) {
   });
 }
 
-//Funcion analisis html
-var Lista_tokens_HTML = [];
-function analisis_html(entrada) {
-  //Inicializamos las listas
-  Lista_tokens_HTML = [];
-  let estado = 0;
-  let columna = 0;
-  let fila = 1;
-  let lexema = "";
-  let c = "";
-  entrada = entrada + " ";
-  //Empezamos el analisis
-  for (let i = 0; i < entrada.length; i++) {
-    c = entrada[i];
-    columna++;
-    switch (estado) {
-      case 0:
-        //Revisara si puede ser una etique o algun texto
-        if (isLetter(c)) {
-          estado = 1;
-          lexema += c;
-        }
-        //Revisara si puede ser un espacio en blanco
-        else if (c === " ") {
-          estado = 0;
-        }
-        //Revisara si puede ser un enter, para cambiar de linea
-        else if (c === "\n") {
-          columna = 0;
-          fila++;
-          estado = 0;
-        }
-
-        //Lista de Tokens ya establecidos que son todos los simbolos admitidos
-        else if (c === "<") {
-          lexema += c;
-          addToken_HTML("i_etiqueta", lexema, fila, columna);
-          lexema = "";
-        } else if (c === ">") {
-          lexema += c;
-          addToken_HTML("f_etiqueta", lexema, fila, columna);
-          lexema = "";
-          estado = -1;
-        } else if (c === "/") {
-          lexema += c;
-          addToken_HTML("diagonal", lexema, fila, columna);
-          lexema = "";
-        } else if (c === "=") {
-          lexema += c;
-          addToken_HTML("igual", lexema, fila, columna);
-          lexema = "";
-        } else if (c === '"') {
-          lexema += c;
-          addToken_HTML("comillas", lexema, fila, columna);
-          lexema = "";
-        } else if (c === ":") {
-          lexema += c;
-          addToken_HTML("dos puntos", lexema, fila, columna);
-          lexema = "";
-        }
-        //Si no es ninguno de la lista de tokens es un plain text
-        else {
-          estado = -1;
-          i--;
-          columna--;
-        }
-        break;
-      case 1:
-        //Buscara que palabra reservada es
-        if (isLetterOrDigit(c)) {
-          lexema += c;
-          estado = 1;
-        } else if (lexema === "html") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("html", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "head") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("head", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "body") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("body", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "title") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("title", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "div") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("div", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "br") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("br", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "p") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("p", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "h1") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("h", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "h2") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("h", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "h3") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("h", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "h4") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("h", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "button") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("button", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "label") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("label", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "input") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("input", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "style") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("style", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "background") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("background", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "yellow") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("color", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "green") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("color", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "blue") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("color", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "red") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("color", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "white") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("color", lexema, fila, columna);
-          lexema = "";
-        } else if (lexema === "skyblue") {
-          i--;
-          columna--;
-          estado = 0;
-          addToken_HTML("color", lexema, fila, columna);
-          lexema = "";
-        }
-        //Si no es ninguno de la lista de tokens es un plain text
-        else {
-          i--;
-          columna--;
-          estado = -1;
-        }
-        break;
-      default:
-        //Es texto
-        //Comprobara todos los datos que contendra el texto, hasta encontrar otro (<) para abrir una etiqueta
-        if (c == "\n") {
-          columna = 0;
-          fila++;
-          estado = -1;
-          lexema += c;
-        } else if (c != "<") {
-          lexema += c;
-          estado = -1;
-        } else {
-          i--;
-          columna--;
-          estado = 0;
-          if (lexema != "") {
-            addToken_HTML("text", lexema, fila, columna);
-          }
-          lexema = "";
-        }
-        break;
-    }
-  }
-}
-
-//Funcion para añadir los tokens html
-function addToken_HTML(tipo, lexema, fila, columna) {
-  Lista_tokens_HTML.push({
-    Tipo: tipo,
-    Lexema: lexema,
-    Fila: fila,
-    Columna: columna,
-  });
-}
-
-//Proceso de analisis sintactico html
-var indice_html = 0;
-var token_html;
-var Codigo_Html = "";
-var Codigo_Json = "";
-var Cont_Tabs_Html = 0;
-//Parser del analisis html
-function parserHtml() {
-  //Reiniamos todos los valores
-  indice_html = 0;
-  token_html = Lista_tokens_HTML[indice_html];
-  error_Html = false;
-  Codigo_Html = "";
-  Codigo_Json = "{\n";
-  Cont_Tabs_Html = 0;
-  //Vamos a añadir un ultimo token para saber donde termina
-  addToken_HTML("Ultimo", "Ultimo", "0", "0");
-  //Empezamos analisis
-  Inicio_Html();
-  Codigo_Json += "}";
-}
-
-function Inicio_Html() {
-  emparejar_Html("i_etiqueta");
-  emparejar_Html("html");
-  emparejar_Html("f_etiqueta");
-  Codigo_Html += "<html>\n";
-  Codigo_Json += '  "html":{\n';
-  Cont_Tabs_Html++;
-  I_HTML();
-  emparejar_Html("i_etiqueta");
-  emparejar_Html("diagonal");
-  emparejar_Html("html");
-  emparejar_Html("f_etiqueta");
-  Cont_Tabs_Html--;
-  Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
-  Codigo_Json += "\n";
-  Codigo_Json += "    }\n";
-  Codigo_Html += "</html>\n";
-}
-
-function I_HTML() {
-  Head_Html();
-  Body_Html();
-}
-
-function Head_Html() {
-  if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
-    if (Lista_tokens_HTML[indice_html + 1].Tipo === "head") {
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += '    "head":{\n';
-      Codigo_Html += "<head>\n";
-      Cont_Tabs_Html++;
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("head");
-      emparejar_Html("f_etiqueta");
-      Title_Html();
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("diagonal");
-      emparejar_Html("head");
-      emparejar_Html("f_etiqueta");
-      Cont_Tabs_Html--;
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += "    },\n";
-      Codigo_Html += "</head>\n";
-    }
-  }
-}
-
-function Title_Html() {
-  if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
-    if (Lista_tokens_HTML[indice_html + 1].Tipo === "title") {
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += '    "title":{\n';
-      Codigo_Html += "<title>\n";
-      Cont_Tabs_Html++;
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("title");
-      emparejar_Html("f_etiqueta");
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += '    "texto":';
-      while (token_html.Tipo === "text") {
-        Codigo_Html += token_html.Lexema;
-        Codigo_Json += '"' + token_html.Lexema + '"';
-        emparejar_Html("text");
-      }
-      Codigo_Json += "\n";
-      Codigo_Html += "\n";
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("diagonal");
-      emparejar_Html("title");
-      emparejar_Html("f_etiqueta");
-      Cont_Tabs_Html--;
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += "    }\n";
-      Codigo_Html += "</title>\n";
-    }
-  }
-}
-
-function Body_Html() {
-  if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
-    if (Lista_tokens_HTML[indice_html + 1].Tipo === "body") {
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += '    "body":{\n';
-      Codigo_Html += "<body";
-      Cont_Tabs_Html++;
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("body");
-      Style_Html();
-      Codigo_Html += ">\n";
-      emparejar_Html("f_etiqueta");
-      Etiquetas();
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("diagonal");
-      emparejar_Html("body");
-      emparejar_Html("f_etiqueta");
-      Cont_Tabs_Html--;
-      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
-      Codigo_Json += "\n";
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += "    },\n";
-      Codigo_Html += "</body>\n";
-    }
-  }
-}
-
-function Style_Html() {
-  if (Lista_tokens_HTML[indice_html].Tipo === "style") {
-    emparejar_Html("style");
-    emparejar_Html("igual");
-    emparejar_Html("comillas");
-    emparejar_Html("background");
-    emparejar_Html("dos puntos");
-    for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-      Codigo_Json += "  ";
-    }
-    Codigo_Json += '    "style":';
-    Codigo_Json += '"background:' + token_html.Lexema + '"' + ",\n";
-    Codigo_Html += ' style="background:' + token_html.Lexema + '"';
-    emparejar_Html("color");
-    emparejar_Html("comillas");
-  }
-}
-
-function Etiquetas() {
-  if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
-    if (Lista_tokens_HTML[indice_html + 1].Tipo === "div") {
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += '    "div":{\n';
-      Codigo_Html += "<div";
-      Cont_Tabs_Html++;
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("div");
-      Style_Html();
-      Codigo_Html += ">\n";
-      emparejar_Html("f_etiqueta");
-      Etiquetas();
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("diagonal");
-      emparejar_Html("div");
-      emparejar_Html("f_etiqueta");
-      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
-      Codigo_Json += "\n";
-      Cont_Tabs_Html--;
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += "    },\n";
-      Codigo_Html += "</div>\n";
-      Etiquetas();
-    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "p") {
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += '    "p":{\n';
-      Codigo_Html += "<p>\n";
-      Cont_Tabs_Html++;
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("p");
-      emparejar_Html("f_etiqueta");
-      Etiquetas();
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("diagonal");
-      emparejar_Html("p");
-      emparejar_Html("f_etiqueta");
-      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
-      Codigo_Json += "\n";
-      Cont_Tabs_Html--;
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += "    },\n";
-      Codigo_Html += "</p>\n";
-      Etiquetas();
-    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "button") {
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += '    "button":{\n';
-      Codigo_Html += "<button>\n";
-      Cont_Tabs_Html++;
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("button");
-      emparejar_Html("f_etiqueta");
-      Etiquetas();
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("diagonal");
-      emparejar_Html("button");
-      emparejar_Html("f_etiqueta");
-      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
-      Codigo_Json += "\n";
-      Cont_Tabs_Html--;
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += "    },\n";
-      Codigo_Html += "</button>\n";
-      Etiquetas();
-    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "label") {
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += '    "label":{\n';
-      Codigo_Html += "<label>\n";
-      Cont_Tabs_Html++;
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("label");
-      emparejar_Html("f_etiqueta");
-      Etiquetas();
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("diagonal");
-      emparejar_Html("label");
-      emparejar_Html("f_etiqueta");
-      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
-      Codigo_Json += "\n";
-      Cont_Tabs_Html--;
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += "    },\n";
-      Codigo_Html += "</label>\n";
-      Etiquetas();
-    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "h") {
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      emparejar_Html("i_etiqueta");
-      Codigo_Json += '    "' + token_html.Lexema + '":{\n';
-      Codigo_Html += "<" + token_html.Lexema + ">\n";
-      Cont_Tabs_Html++;
-      emparejar_Html("h");
-      emparejar_Html("f_etiqueta");
-      Etiquetas();
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("diagonal");
-      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
-      Codigo_Json += "\n";
-      Cont_Tabs_Html--;
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += "    },\n";
-      Codigo_Html += "</" + token_html.Lexema + ">\n";
-      emparejar_Html("h");
-      emparejar_Html("f_etiqueta");
-      Etiquetas();
-    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "input") {
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += '    "input":"",\n';
-      Codigo_Html += "<input>\n";
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("input");
-      emparejar_Html("f_etiqueta");
-      Etiquetas();
-    } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "br") {
-      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-        Codigo_Html += "  ";
-        Codigo_Json += "  ";
-      }
-      Codigo_Json += '    "br":"",\n';
-      Codigo_Html += "<br>\n";
-      emparejar_Html("i_etiqueta");
-      emparejar_Html("br");
-      emparejar_Html("f_etiqueta");
-      Etiquetas();
-    }
-  } else if (Lista_tokens_HTML[indice_html].Tipo === "text") {
-    for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
-      Codigo_Html += "  ";
-      Codigo_Json += "  ";
-    }
-    Codigo_Json += '    "texto":';
-    Codigo_Json += '"' + token_html.Lexema + '"' + ",\n";
-    Codigo_Html += token_html.Lexema + "\n";
-    emparejar_Html("text");
-    Etiquetas();
-  }
-}
-
-//Emparejar html
-var error_Html = false;
-
-function emparejar_Html(tip) {
-  if (!error_Html && token_html.Tipo != "Ultimo") {
-    //console.log(tip);
-    if (tip === token_html.Tipo) {
-      indice_html++;
-      token_html = Lista_tokens_HTML[indice_html];
-    } else {
-      console.log(token_html);
-      error_Html = true;
-    }
-  }
-}
-
 //Proceso para la lectura de cadenas HTML
 var html_print = "";
 //Variables de archivos
@@ -2611,10 +2013,12 @@ function readHTML() {
     '<html><head><title>Example 1</title></head><body style="background: skyblue"><h2>[OLC1]Practica 2</h2><p>Si<br>sale<br>compi<br>1<br>:)<br>html sin errores..!!!</p></body></html>';
   var html_1 =
     '<html><head><title>Mi pagina</title></head><body style="background:yellow"><h1>[OLC1] Practica 1</h1><div style="background:white"><h2>Encabezado h2</h2><p>Este es un bloque<br>de texto, para una <br>prueba.</p><br></div><div style="background:skyblue"><h2>Llenar los campos</h2><label>Ingrese su nombre:</label><br><input><br><button>Mi boton</button><br></div></body></html>';
+  //------------------------------------------------------------
   if (html_print != "") {
-    analisis_html(html_print);
+    regexHtml(html_print);
+    existTag();
     parserHtml();
-    if (!error_Html) {
+    if (Lista_Errores_Etiquetas.length === 0) {
       var Console_html = ace.edit("console-html");
       var Console_json = ace.edit("console-json");
       //Le asignamos lo leido
@@ -2660,5 +2064,242 @@ function openJson() {
 
 //Funcion para descargar el archivo html incrustrado
 function downloadJson() {
-  saveDocument(Codigo_Json, "page_traducion.json");
+  var html_ =
+    '<html><head><title>Example 1</title></head><body style="background:skyblue"><h2>[OLC1]Practica 2</h2><p>Si<br>sale<br>compi<br>1<br>:)<br>html sin errores..!!!</p></body></html>';
+  var html_1 =
+    '<html><head><title>Mi pagina</title></head><body style="background:yellow"><h1>[OLC1] Practica 1</h1><div style="background:white"><h2>Encabezado h2</h2><p>Este es un bloque<br>de texto, para una <br>prueba.</p><br></div><div style="background:skyblue"><h2>Llenar los campos</h2><label>Ingrese su nombre:</label><br><input><br><button>Mi boton</button><br></div></body></html>';
+  regexHtml(html_1);
+  regexHtml(html_);
+  existTag();
+  parserHtml();
+  //saveDocument(Codigo_Json, "page_traducion.json");
+}
+
+//Nuevo analisis de cadena html
+var Lista_Etiquetas = [];
+function regexHtml(entrada) {
+  //Inicializamos las listas
+  Lista_Etiquetas = [];
+  let lexema = "";
+  let c = "";
+  entrada = entrada + " ";
+  let estado = 0;
+  //Expresion a utilizar
+  let regex = '(^</?)([-_a-zA-Z0-9:. "=]+)/?>';
+  //Empezamos el analisis
+  for (let i = 0; i < entrada.length; i++) {
+    c = entrada[i];
+    switch (estado) {
+      case 0:
+        if (c === "<") {
+          estado = 1;
+          lexema += c;
+        } else {
+          estado = -1;
+          lexema += c;
+        }
+        break;
+      case 1:
+        if (c != ">") {
+          lexema += c;
+          estado = 1;
+        } else {
+          lexema += c;
+          estado = 2;
+        }
+        break;
+      case 2:
+        if (lexema.match(regex)) {
+          let aux_Lexema = lexema
+            .replace("<", "")
+            .replace(">", "")
+            .replace("/", "_");
+          if (aux_Lexema.substring(0, 5) === "body ") {
+            addEtiqueta("body", lexema);
+            localizeStyle(aux_Lexema.substring(5, aux_Lexema.length));
+          } else if (aux_Lexema.substring(0, 4) === "div ") {
+            addEtiqueta("div", lexema);
+            localizeStyle(aux_Lexema.substring(4, aux_Lexema.length));
+          } else if (aux_Lexema.match(/(h[1-4])/)) {
+            if (aux_Lexema.substr(0, 1) === "_") {
+              addEtiqueta(aux_Lexema.substr(0, 2), lexema);
+            } else {
+              addEtiqueta("h", lexema);
+            }
+          } else {
+            addEtiqueta(aux_Lexema, lexema);
+          }
+          lexema = "";
+          estado = 0;
+          i--;
+        } else {
+          console.log("Etiqueta mala: " + lexema);
+          estado = 0;
+          lexema = "";
+          i--;
+        }
+        break;
+      default:
+        if (c != "<") {
+          lexema += c;
+        } else {
+          addEtiqueta("text", lexema);
+          lexema = "";
+          estado = 0;
+          i--;
+        }
+        break;
+    }
+  }
+  console.log(Lista_Etiquetas);
+}
+
+//Funcion style del div y body
+function localizeStyle(style) {
+  let lexema = "";
+  style = style + " ";
+  //Empezamos el analisis
+  for (let i = 0; i < style.length; i++) {
+    lexema += style[i];
+    lexema = lexema.replace(" ", "");
+    if (lexema === "style") {
+      addEtiqueta(lexema, lexema);
+      lexema = "";
+    } else if (lexema === ":") {
+      addEtiqueta(lexema, lexema);
+      lexema = "";
+    } else if (lexema === "=") {
+      addEtiqueta(lexema, lexema);
+      lexema = "";
+    } else if (lexema === "background") {
+      addEtiqueta(lexema, lexema);
+      lexema = "";
+    } else if (lexema === '"') {
+      lexema = "";
+    } else if (
+      lexema
+        .substring(0, lexema.length)
+        .match(/^(yellow|green|blue|red|white|skyblue)$/)
+    ) {
+      addEtiqueta("color", lexema);
+      i--;
+      lexema = "";
+    }
+  }
+}
+
+//Funcion para añadir los tokens html
+function addEtiqueta(tipo, lexema) {
+  Lista_Etiquetas.push({
+    Tipo: tipo,
+    Lexema: lexema,
+  });
+}
+
+//Verificar que solo esos tipos existen
+function existTag() {
+  Lista_Errores_Etiquetas = [];
+  let regex =
+    '^(_?)(html|head|title|br|p|h|button|label|input|body|div|style|:|"|background|=|color|text)$';
+  Lista_Etiquetas.forEach((tag) => {
+    if (!tag.Tipo.match(regex)) {
+      erroresEtiquetas(tag.Lexema);
+    }
+  });
+  console.log(Lista_Errores_Etiquetas);
+}
+
+//Erores en el html
+var Lista_Errores_Etiquetas = [];
+function erroresEtiquetas(tag) {
+  Lista_Errores_Etiquetas.push({
+    Error: "La etiqueta " + tag + " no esta en las permitidas",
+  });
+}
+
+//Proceso de analisis sintactico html
+var indice_html = 0;
+var Codigo_Html = "";
+var Codigo_Json = "";
+var Cont_Tabs_Html = 0;
+//Parser del analisis html
+function parserHtml() {
+  //Reiniamos todos los valores
+  indice_html = 0;
+  token_html = Lista_Etiquetas[indice_html];
+  Codigo_Html = "";
+  Codigo_Json = "{\n";
+  Cont_Tabs_Html = 0;
+  addEtiqueta("Ultimo", "Ultimo", "0", "0");
+  //Empezamos analisis
+  Etiquetas();
+  Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
+  Codigo_Json += "\n";
+  Codigo_Json += "}";
+}
+
+function Etiquetas() {
+  let regex = "^(html|head|p|h|button|label|body|div)$";
+  let regexUnit = "^(br|input|text)$";
+  if (Lista_Etiquetas[indice_html].Tipo != "Ultimo") {
+    if (Lista_Etiquetas[indice_html].Tipo.match(regex)) {
+      tag_start(Lista_Etiquetas[indice_html]);
+      Style_Html();
+      Etiquetas();
+      tag_final(Lista_Etiquetas[indice_html]);
+      Etiquetas();
+    } else if (Lista_Etiquetas[indice_html].Tipo.match(regexUnit)) {
+      tag_unit(Lista_Etiquetas[indice_html]);
+      Etiquetas();
+    } else if (Lista_Etiquetas[indice_html].Tipo === "title") {
+      tag_start(Lista_Etiquetas[indice_html]);
+      Etiquetas();
+      tag_final(Lista_Etiquetas[indice_html]);
+    }
+  }
+}
+
+function Style_Html() {
+  if (Lista_Etiquetas[indice_html].Tipo === "style") {
+    indice_html = indice_html + 5;
+  }
+}
+
+function tag_start(tag) {
+  for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+    Codigo_Html += "  ";
+    Codigo_Json += "  ";
+  }
+  indice_html++;
+  Codigo_Json += '    "' + tag.Tipo + '":{\n';
+  Codigo_Html += tag.Lexema + "\n";
+  Cont_Tabs_Html++;
+}
+
+function tag_final(tag) {
+  Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
+  Codigo_Json += "\n";
+  Cont_Tabs_Html--;
+  for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+    Codigo_Html += "  ";
+    Codigo_Json += "  ";
+  }
+  Codigo_Json += "    },\n";
+  Codigo_Html += tag.Lexema + "\n";
+  indice_html++;
+}
+
+function tag_unit(tag) {
+  for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+    Codigo_Html += "  ";
+    Codigo_Json += "  ";
+  }
+  Codigo_Json += '    "' + tag.Tipo + '":';
+  if (tag.Tipo === "text") {
+    Codigo_Json += '"' + tag.Lexema + '"' + ",\n";
+  } else {
+    Codigo_Json += '"",\n';
+  }
+  Codigo_Html += tag.Lexema + "\n";
+  indice_html++;
 }
