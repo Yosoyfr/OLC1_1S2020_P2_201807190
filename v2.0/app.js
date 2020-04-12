@@ -2064,15 +2064,7 @@ function openJson() {
 
 //Funcion para descargar el archivo html incrustrado
 function downloadJson() {
-  var html_ =
-    '<html><head><title>Example 1</title></head><body style="background:skyblue"><h2>[OLC1]Practica 2</h2><p>Si<br>sale<br>compi<br>1<br>:)<br>html sin errores..!!!</p></body></html>';
-  var html_1 =
-    '<html><head><title>Mi pagina</title></head><body style="background:yellow"><h1>[OLC1] Practica 1</h1><div style="background:white"><h2>Encabezado h2</h2><p>Este es un bloque<br>de texto, para una <br>prueba.</p><br></div><div style="background:skyblue"><h2>Llenar los campos</h2><label>Ingrese su nombre:</label><br><input><br><button>Mi boton</button><br></div></body></html>';
-  regexHtml(html_1);
-  regexHtml(html_);
-  existTag();
-  parserHtml();
-  //saveDocument(Codigo_Json, "page_traducion.json");
+  saveDocument(Codigo_Json, "page_traducion.json");
 }
 
 //Nuevo analisis de cadena html
@@ -2302,4 +2294,99 @@ function tag_unit(tag) {
   }
   Codigo_Html += tag.Lexema + "\n";
   indice_html++;
+}
+
+//Variable que sera el file de la lista de tokens
+var file_tokens;
+//Funcion para obtener la lista de tokens encontrados
+function printTokens() {
+  //Reiniciamos el doc
+  file_tokens = null;
+  //Creacion del html
+  var Lista_de_Tokens_HTML =
+    "<html>" +
+    "<head>" +
+    "<meta charset='utf-8'>" +
+    "<title>\n" +
+    "		Reporte de Tokens\n" +
+    "	</title>\n" +
+    '	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">\n' +
+    '<Script Language="JavaScript">\n' +
+    " function DameLaFechaHora() {\n" +
+    "var hora = new Date()\n" +
+    "var hrs = hora.getHours();\n" +
+    "var min = hora.getMinutes();\n" +
+    "var hoy = new Date();\n" +
+    "var m = new Array();\n" +
+    "var d = new Array()\n" +
+    "var an = hoy.getFullYear();\n" +
+    'm[0] = "Enero"; m[1] = "Febrero"; m[2] = "Marzo";\n' +
+    'm[3] = "Abril"; m[4] = "Mayo"; \n' +
+    'm[5] = "Junio";m[6] = "Julio"; m[7] = "Agosto"; m[8] = "Septiembre";\n' +
+    'm[9] = "Octubre"; m[10] = "Noviembre"; m[11] = "Diciembre";\n' +
+    'document.write(hrs + ":" + min + " (");\n' +
+    " document.write(hoy.getDate());\n" +
+    'document.write(" de ")\n;' +
+    "document.write(m[hoy.getMonth()])\n;" +
+    'document.write(" del " + an)\n; ' +
+    'document.write(")");\n' +
+    "}</Script>\n" +
+    "</head><body>\n" +
+    '<div class="shadow-lg p-3 mb-5 rounded bg-dark text-white">\n' +
+    "		<center><h1>Reporte de Tokens \n" +
+    '  <small class="text-muted bg-white">Lista de Tokens</small></h1> <script>DameLaFechaHora();</script> ' +
+    "</div>\n" +
+    '	<div class="container">\n' +
+    '		<table class="table table-hover table-light text-center">\n' +
+    ' 			 <thead class="thead-dark">   					 <tr>\n' +
+    '				      <th scope="col">    #   </th>\n' +
+    '				      <th scope="col">    LINEA    </th>\n' +
+    '				      <th scope="col" style="width: 450px">LEXEMA</th>\n' +
+    '				      <th scope="col" style="width: 400px">         TOKEN         </th>\n' +
+    "				    </tr>\n" +
+    "				  </thead><tbody>";
+  /*
+   * Enlistado del vector de tokens encontrado en el analisis
+   */
+  for (let i = 0; i < Lista_de_Tokens.length; i++) {
+    if (
+      Lista_de_Tokens[i].Tipo != "Ultimo" &&
+      Lista_de_Tokens[i].Tipo != "Cadena html"
+    ) {
+      Lista_de_Tokens_HTML =
+        Lista_de_Tokens_HTML +
+        "<tr>\n" +
+        '				      <th scope="row">' +
+        (i + 1) +
+        "</th>\n" +
+        "				      <td>" +
+        Lista_de_Tokens[i].Fila +
+        "</td>\n" +
+        '				      <td style="width: 450px" >' +
+        Lista_de_Tokens[i].Lexema +
+        "</td>\n" +
+        '				      <td style="width: 400px">' +
+        Lista_de_Tokens[i].Tipo +
+        "</td>\n" +
+        "				    </tr>";
+    }
+  }
+  /*
+   * Finalizacion del archivo HTML
+   */
+  Lista_de_Tokens_HTML =
+    Lista_de_Tokens_HTML +
+    "</tbody>\n" +
+    "				</table>\n" +
+    "\n" +
+    "			</div>\n" +
+    "		\n" +
+    "</body>\n" +
+    "</html>";
+
+  file_tokens = new File([Lista_de_Tokens_HTML], "Lista_Tokens.html", {
+    type: "text/html;charset=utf-8",
+  });
+  //Abre el documento
+  openFiles(file_tokens);
 }
