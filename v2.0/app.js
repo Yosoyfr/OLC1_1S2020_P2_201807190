@@ -130,7 +130,7 @@ function addWindow() {
   //Creamos el textArea del tab
   let new_TextArea = document.createElement("div");
   new_TextArea.setAttribute("class", "list-group");
-  new_TextArea.setAttribute("style", "height: 270px; position: relative;");
+  new_TextArea.setAttribute("style", "height: 330px; position: relative;");
   new_TextArea.setAttribute("id", "txt" + ctrl_Tabs);
 
   //Le agremaos el text area al tab
@@ -143,7 +143,7 @@ function addWindow() {
 
   //Creamos el editor de texto
   let editor = ace.edit("txt" + ctrl_Tabs);
-  editor.setTheme("ace/theme/katzenmilch");
+  editor.setTheme("ace/theme/cobalt");
   editor.session.setMode("ace/mode/csharp");
   editor.setFontSize("14px");
   //Sumamos una mas
@@ -187,8 +187,14 @@ function changeTab(id) {
   select_Tab = id;
 }
 
+//Archivo python
+var file_python;
 //Funcion para el proceso RUN
 function run() {
+  //Limpiamos los files
+  file_html = null;
+  file_python = null;
+  file_json = null;
   //Obtenemos la tabla
   let table = document.getElementById("table_var");
   //Limpiamos la tabla
@@ -211,6 +217,13 @@ function run() {
         var Console_ = ace.edit("console");
         //Le asignamos lo leido
         Console_.getSession().setValue(Codigo_Python);
+        //Creamos el archivo python
+        //Creamos el archivo html
+        file_python = new File([Codigo_Python], "Reporte_python.py", {
+          type: "text/plain;charset=utf-8",
+        });
+        //Analizamos el codigo html
+        readHTML();
       } else {
         ErrorAnalisis("Existen errores sintacticos");
       }
@@ -1372,6 +1385,12 @@ function Imprimir() {
     emparejar("Reservada write");
     emparejar("Parentesis izquierdo");
     //Expresion a imprimir
+    if (tokenActual.Tipo === "Cadena html") {
+      html_print = tokenActual.Lexema.substring(
+        1,
+        tokenActual.Lexema.length - 1
+      );
+    }
     Expresiones();
     for (let j = 0; j < Contador_Tabs_Python; j++) {
       Codigo_Python += "  ";
@@ -2232,22 +2251,42 @@ function addToken_HTML(tipo, lexema, fila, columna) {
 //Proceso de analisis sintactico html
 var indice_html = 0;
 var token_html;
+var Codigo_Html = "";
+var Codigo_Json = "";
+var Cont_Tabs_Html = 0;
 //Parser del analisis html
 function parserHtml() {
   //Reiniamos todos los valores
   indice_html = 0;
   token_html = Lista_tokens_HTML[indice_html];
   error_Html = false;
+  Codigo_Html = "";
+  Codigo_Json = "{\n";
+  Cont_Tabs_Html = 0;
   //Vamos a añadir un ultimo token para saber donde termina
   addToken_HTML("Ultimo", "Ultimo", "0", "0");
+  //Empezamos analisis
+  Inicio_Html();
+  Codigo_Json += "}";
+}
+
+function Inicio_Html() {
   emparejar_Html("i_etiqueta");
   emparejar_Html("html");
   emparejar_Html("f_etiqueta");
+  Codigo_Html += "<html>\n";
+  Codigo_Json += '  "html":{\n';
+  Cont_Tabs_Html++;
   I_HTML();
   emparejar_Html("i_etiqueta");
   emparejar_Html("diagonal");
   emparejar_Html("html");
   emparejar_Html("f_etiqueta");
+  Cont_Tabs_Html--;
+  Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
+  Codigo_Json += "\n";
+  Codigo_Json += "    }\n";
+  Codigo_Html += "</html>\n";
 }
 
 function I_HTML() {
@@ -2258,6 +2297,13 @@ function I_HTML() {
 function Head_Html() {
   if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
     if (Lista_tokens_HTML[indice_html + 1].Tipo === "head") {
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += '    "head":{\n';
+      Codigo_Html += "<head>\n";
+      Cont_Tabs_Html++;
       emparejar_Html("i_etiqueta");
       emparejar_Html("head");
       emparejar_Html("f_etiqueta");
@@ -2266,6 +2312,13 @@ function Head_Html() {
       emparejar_Html("diagonal");
       emparejar_Html("head");
       emparejar_Html("f_etiqueta");
+      Cont_Tabs_Html--;
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += "    },\n";
+      Codigo_Html += "</head>\n";
     }
   }
 }
@@ -2273,16 +2326,39 @@ function Head_Html() {
 function Title_Html() {
   if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
     if (Lista_tokens_HTML[indice_html + 1].Tipo === "title") {
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += '    "title":{\n';
+      Codigo_Html += "<title>\n";
+      Cont_Tabs_Html++;
       emparejar_Html("i_etiqueta");
       emparejar_Html("title");
       emparejar_Html("f_etiqueta");
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += '    "texto":';
       while (token_html.Tipo === "text") {
+        Codigo_Html += token_html.Lexema;
+        Codigo_Json += '"' + token_html.Lexema + '"';
         emparejar_Html("text");
       }
+      Codigo_Json += "\n";
+      Codigo_Html += "\n";
       emparejar_Html("i_etiqueta");
       emparejar_Html("diagonal");
       emparejar_Html("title");
       emparejar_Html("f_etiqueta");
+      Cont_Tabs_Html--;
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += "    }\n";
+      Codigo_Html += "</title>\n";
     }
   }
 }
@@ -2290,15 +2366,32 @@ function Title_Html() {
 function Body_Html() {
   if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
     if (Lista_tokens_HTML[indice_html + 1].Tipo === "body") {
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += '    "body":{\n';
+      Codigo_Html += "<body";
+      Cont_Tabs_Html++;
       emparejar_Html("i_etiqueta");
       emparejar_Html("body");
       Style_Html();
+      Codigo_Html += ">\n";
       emparejar_Html("f_etiqueta");
       Etiquetas();
       emparejar_Html("i_etiqueta");
       emparejar_Html("diagonal");
       emparejar_Html("body");
       emparejar_Html("f_etiqueta");
+      Cont_Tabs_Html--;
+      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
+      Codigo_Json += "\n";
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += "    },\n";
+      Codigo_Html += "</body>\n";
     }
   }
 }
@@ -2310,6 +2403,12 @@ function Style_Html() {
     emparejar_Html("comillas");
     emparejar_Html("background");
     emparejar_Html("dos puntos");
+    for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+      Codigo_Json += "  ";
+    }
+    Codigo_Json += '    "style":';
+    Codigo_Json += '"background:' + token_html.Lexema + '"' + ",\n";
+    Codigo_Html += ' style="background:' + token_html.Lexema + '"';
     emparejar_Html("color");
     emparejar_Html("comillas");
   }
@@ -2318,17 +2417,41 @@ function Style_Html() {
 function Etiquetas() {
   if (Lista_tokens_HTML[indice_html].Tipo === "i_etiqueta") {
     if (Lista_tokens_HTML[indice_html + 1].Tipo === "div") {
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += '    "div":{\n';
+      Codigo_Html += "<div";
+      Cont_Tabs_Html++;
       emparejar_Html("i_etiqueta");
       emparejar_Html("div");
       Style_Html();
+      Codigo_Html += ">\n";
       emparejar_Html("f_etiqueta");
       Etiquetas();
       emparejar_Html("i_etiqueta");
       emparejar_Html("diagonal");
       emparejar_Html("div");
       emparejar_Html("f_etiqueta");
+      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
+      Codigo_Json += "\n";
+      Cont_Tabs_Html--;
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += "    },\n";
+      Codigo_Html += "</div>\n";
       Etiquetas();
     } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "p") {
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += '    "p":{\n';
+      Codigo_Html += "<p>\n";
+      Cont_Tabs_Html++;
       emparejar_Html("i_etiqueta");
       emparejar_Html("p");
       emparejar_Html("f_etiqueta");
@@ -2337,8 +2460,24 @@ function Etiquetas() {
       emparejar_Html("diagonal");
       emparejar_Html("p");
       emparejar_Html("f_etiqueta");
+      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
+      Codigo_Json += "\n";
+      Cont_Tabs_Html--;
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += "    },\n";
+      Codigo_Html += "</p>\n";
       Etiquetas();
     } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "button") {
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += '    "button":{\n';
+      Codigo_Html += "<button>\n";
+      Cont_Tabs_Html++;
       emparejar_Html("i_etiqueta");
       emparejar_Html("button");
       emparejar_Html("f_etiqueta");
@@ -2347,8 +2486,24 @@ function Etiquetas() {
       emparejar_Html("diagonal");
       emparejar_Html("button");
       emparejar_Html("f_etiqueta");
+      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
+      Codigo_Json += "\n";
+      Cont_Tabs_Html--;
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += "    },\n";
+      Codigo_Html += "</button>\n";
       Etiquetas();
     } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "label") {
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += '    "label":{\n';
+      Codigo_Html += "<label>\n";
+      Cont_Tabs_Html++;
       emparejar_Html("i_etiqueta");
       emparejar_Html("label");
       emparejar_Html("f_etiqueta");
@@ -2357,29 +2512,73 @@ function Etiquetas() {
       emparejar_Html("diagonal");
       emparejar_Html("label");
       emparejar_Html("f_etiqueta");
+      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
+      Codigo_Json += "\n";
+      Cont_Tabs_Html--;
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += "    },\n";
+      Codigo_Html += "</label>\n";
       Etiquetas();
     } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "h") {
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
       emparejar_Html("i_etiqueta");
+      Codigo_Json += '    "' + token_html.Lexema + '":{\n';
+      Codigo_Html += "<" + token_html.Lexema + ">\n";
+      Cont_Tabs_Html++;
       emparejar_Html("h");
       emparejar_Html("f_etiqueta");
       Etiquetas();
       emparejar_Html("i_etiqueta");
       emparejar_Html("diagonal");
+      Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
+      Codigo_Json += "\n";
+      Cont_Tabs_Html--;
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += "    },\n";
+      Codigo_Html += "</" + token_html.Lexema + ">\n";
       emparejar_Html("h");
       emparejar_Html("f_etiqueta");
       Etiquetas();
     } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "input") {
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += '    "input":"",\n';
+      Codigo_Html += "<input>\n";
       emparejar_Html("i_etiqueta");
       emparejar_Html("input");
       emparejar_Html("f_etiqueta");
       Etiquetas();
     } else if (Lista_tokens_HTML[indice_html + 1].Tipo === "br") {
+      for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+        Codigo_Html += "  ";
+        Codigo_Json += "  ";
+      }
+      Codigo_Json += '    "br":"",\n';
+      Codigo_Html += "<br>\n";
       emparejar_Html("i_etiqueta");
       emparejar_Html("br");
       emparejar_Html("f_etiqueta");
       Etiquetas();
     }
   } else if (Lista_tokens_HTML[indice_html].Tipo === "text") {
+    for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
+      Codigo_Html += "  ";
+      Codigo_Json += "  ";
+    }
+    Codigo_Json += '    "texto":';
+    Codigo_Json += '"' + token_html.Lexema + '"' + ",\n";
+    Codigo_Html += token_html.Lexema + "\n";
     emparejar_Html("text");
     Etiquetas();
   }
@@ -2402,17 +2601,64 @@ function emparejar_Html(tip) {
 }
 
 //Proceso para la lectura de cadenas HTML
+var html_print = "";
+//Variables de archivos
+var file_html;
+var file_json;
 function readHTML() {
+  //Test
   var html_ =
     '<html><head><title>Example 1</title></head><body style="background: skyblue"><h2>[OLC1]Practica 2</h2><p>Si<br>sale<br>compi<br>1<br>:)<br>html sin errores..!!!</p></body></html>';
   var html_1 =
     '<html><head><title>Mi pagina</title></head><body style="background:yellow"><h1>[OLC1] Practica 1</h1><div style="background:white"><h2>Encabezado h2</h2><p>Este es un bloque<br>de texto, para una <br>prueba.</p><br></div><div style="background:skyblue"><h2>Llenar los campos</h2><label>Ingrese su nombre:</label><br><input><br><button>Mi boton</button><br></div></body></html>';
-  analisis_html(html_1);
-  console.log(Lista_tokens_HTML);
-  parserHtml();
-  if (!error_Html) {
-    console.log("Html bien");
-  } else {
-    console.log("Html malo");
+  if (html_print != "") {
+    analisis_html(html_print);
+    parserHtml();
+    if (!error_Html) {
+      var Console_html = ace.edit("console-html");
+      var Console_json = ace.edit("console-json");
+      //Le asignamos lo leido
+      Console_html.getSession().setValue(Codigo_Html);
+      Console_json.getSession().setValue(Codigo_Json);
+      //Creamos el archivo html
+      file_html = new File([Codigo_Html], "Reporte.html", {
+        type: "text/html;charset=utf-8",
+      });
+      file_json = new File([Codigo_Json], "Reporte.json", {
+        type: "text/json;charset=utf-8",
+      });
+    } else {
+      ErrorAnalisis("Existen errores en la cadena html");
+    }
   }
+}
+
+//Funcion para abrir la pagina html incrustado
+function openHtml() {
+  openFiles(file_html);
+}
+
+//Funcion para descargar el archivo html incrustrado
+function downloadHtml() {
+  saveDocument(Codigo_Html, "page.html");
+}
+
+//Funcion para abrir el documento python generado
+function openPython() {
+  openFiles(file_python);
+}
+
+//Funcion para descargar el archivo html incrustrado
+function downloadPython() {
+  saveDocument(Codigo_Python, "traduccion.py");
+}
+
+//Funcion para abrir el documento python generado
+function openJson() {
+  openFiles(file_json);
+}
+
+//Funcion para descargar el archivo html incrustrado
+function downloadJson() {
+  saveDocument(Codigo_Json, "page_traducion.json");
 }

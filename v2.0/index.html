@@ -6,12 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="bootstrap.css" />
   <title>Traductor C# a Python</title>
+  <script src="https://kit.fontawesome.com/97019646c2.js"></script>
 </head>
 
 <body>
   <!--Navbar inicial -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <a class="navbar-brand" href="#">OLC1</a>
+    <a class="navbar-brand" href="#">OLC1 <i class="fab fa-font-awesome-flag fa-lg"></i></a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
       aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -23,17 +24,20 @@
         <!--Menu de archivo-->
         <li class="nav-item">
           <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
-            <a class="nav-link" href="#">Archivo</a>
+            <a class="nav-link" href="#">Archivo <i class="fas fa-file fa-lg"></i></a>
             <div class="btn-group" role="group">
               <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false"></button>
               <!--Opciones del menu-->
               <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                <label for="file-input" class="dropdown-item">Abrir</label>
+                <label for="file-input" class="dropdown-item">Abrir <i class="fas fa-file-upload fa-lg"></i></label>
                 <input type="file" id="file-input" style='display: none;' accept=".cs">
-                <a class="dropdown-item" href="#" onclick="saveFiles()" id="save-file">Guardar</a>
-                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modal-save">Guardar como...</a>
-                <a class="dropdown-item" href="#" id="btn-window" onclick="addWindow()">Agregar pestaña</a>
+                <a class="dropdown-item" href="#" onclick="saveFiles()" id="save-file">Guardar <i
+                    class="fas fa-file-download fa-lg"></i></a>
+                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modal-save">Guardar como... <i
+                    class="fas fa-file-export fa-lg"></i></a>
+                <a class="dropdown-item" href="#" id="btn-window" onclick="addWindow()">Agregar pestaña <i
+                    class="fas fa-plus"></i></a>
               </div>
             </div>
           </div>
@@ -41,26 +45,35 @@
         <!--Menu de reportes-->
         <li class="nav-item">
           <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
-            <a class="nav-link" href="#">Reportes</a>
+            <a class="nav-link" href="#">Reportes <i class="fas fa-file-code fa-lg"></i></a>
             <div class="btn-group" role="group">
               <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false"></button>
               <!--Opciones del menu-->
               <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                <a class="dropdown-item" href="#">Archivo.py</a>
-                <a class="dropdown-item" href="#">Archivo.html</a>
+                <a class="dropdown-item" href="#" onclick="openPython()">Archivo.py
+                  <i class="fab fa-python fa-lg"></i></a>
+                <a class="dropdown-item" href="#" onclick="openHtml()">Archivo.html
+                  <i class="fab fa-html5 fa-lg"></i></a>
+                <a class="dropdown-item" href="#" onclick="openJson()">Archivo.json
+                  <i class="fab fa-node-js fa-lg""></i></a>
+                <a class=" dropdown-item" href="#" onclick="downloadPython()">Download Python
+                    <i class="fab fa-python fa-lg"></i></a>
+                <a class="dropdown-item" href="#" onclick="downloadHtml()">Download HTML
+                  <i class="fab fa-html5 fa-lg"></i></a>
+                <a class="dropdown-item" href="#" onclick="downloadJson()">Download JSON
+                  <i class="fab fa-node-js fa-lg""></i></a>
               </div>
             </div>
           </div>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" id="btn-analizar" onclick="run()">Run</a>
+        <li class=" nav-item">
+                    <a class="nav-link" href="#" id="btn-analizar" onclick="run()">Run <i
+                        class="fas fa-play-circle fa-lg"></i></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#" data-toggle="modal" data-target="#myModal">About</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" onclick="readHTML()">Html</a>
+          <a class="nav-link" href="#" data-toggle="modal" data-target="#myModal">About <i
+              class="fab fa-creative-commons-by fa-lg"></i></a>
         </li>
       </ul>
     </div>
@@ -72,6 +85,7 @@
     <div class="row">
       <!--Lista de ventanas-->
       <div class="col-md-6">
+        <h4>Tabla de variables</h4>
         <ul class="nav nav-tabs border-primary" id="myTabs">
           <li class="nav-item">
             <a class="nav-link active" data-toggle="tab" href="#p1" onclick="changeTab('txt1')">Pestaña 1</a>
@@ -79,7 +93,7 @@
         </ul>
         <div id="myTabContent" class="tab-content">
           <div class="tab-pane fade show active" id="p1">
-            <div class="list-group" id="txt1" style="height: 270px; position: relative;"></div>
+            <div class="list-group" id="txt1" style="height: 330px; position: relative;"></div>
           </div>
         </div>
       </div>
@@ -89,7 +103,7 @@
         <div class="card text-white bg-secondary border-primary mb-2">
           <div class="card-header bg-primary ">Console: Python</div>
           <div class="card-body">
-            <div class="list-group" id="console" style="height: 220px; position: relative;"></div>
+            <div class="list-group" id="console" style="height: 280px; position: relative;"></div>
           </div>
         </div>
       </div>
@@ -101,7 +115,7 @@
     <div class="row">
       <style>
         .contenedor {
-          height: 280px;
+          height: 370px;
           overflow-x: hidden;
         }
       </style>
@@ -133,11 +147,11 @@
         </ul>
         <div id="myTabContent" class="tab-content">
           <div class="tab-pane fade show active" id="p3">
-            <textarea class="form-control" id="archivo_html" rows="10" disabled></textarea>
+            <div class="list-group" id="console-html" style="height: 330px; position: relative;"></div>
           </div>
 
           <div class="tab-pane fade" id="p4">
-            <textarea class="form-control" id="archivo_json" rows="10" disabled></textarea>
+            <div class="list-group" id="console-json" style="height: 330px; position: relative;"></div>
           </div>
         </div>
       </div>
@@ -217,7 +231,7 @@
   <script src="ace-builds-master/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
   <script>
     var editor = ace.edit("txt1");
-    editor.setTheme("ace/theme/katzenmilch");
+    editor.setTheme("ace/theme/cobalt");
     editor.session.setMode("ace/mode/csharp");
     editor.setFontSize("14px");
 
@@ -226,6 +240,18 @@
     Console_.session.setMode("ace/mode/python");
     Console_.setFontSize("14px");
     Console_.textInput.getElement().disabled = true;
+
+    var Console_html = ace.edit("console-html");
+    Console_html.setTheme("ace/theme/cobalt");
+    Console_html.session.setMode("ace/mode/html");
+    Console_html.setFontSize("14px");
+    Console_html.textInput.getElement().disabled = true;
+
+    var Console_Json = ace.edit("console-json");
+    Console_Json.setTheme("ace/theme/cobalt");
+    Console_Json.session.setMode("ace/mode/html");
+    Console_Json.setFontSize("14px");
+    Console_Json.textInput.getElement().disabled = true;
   </script>
 
   <script src="app.js"></script>
