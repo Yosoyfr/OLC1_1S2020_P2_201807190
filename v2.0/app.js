@@ -196,6 +196,7 @@ function run() {
   file_python = null;
   file_json = null;
   html_print = "";
+  pasoLibre = true;
   //Obtenemos la tabla
   let table = document.getElementById("table_var");
   //Limpiamos la tabla
@@ -205,32 +206,29 @@ function run() {
   let value_Txt = editor.getSession().getValue();
   //Empezamos con el analisis lexico
   analisis_Lexico(value_Txt);
-  if (pasoLibre) {
-    console.log(Lista_de_Tokens);
+  //console.log(Lista_de_Tokens);
+  //Empezamos con el analisis sintactico
+  parser();
+  if (Error_Sintactico_Permiso) {
+    //Creamos la tabla de variables
+    addTable();
+    //Obteneos la traduccion
+    var Console_ = ace.edit("console");
+    //Le asignamos lo leido
+    Console_.getSession().setValue(Codigo_Python);
+    //Creamos el archivo python
+    //Creamos el archivo html
+    file_python = new File([Codigo_Python], "Reporte_python.py", {
+      type: "text/plain;charset=utf-8",
+    });
+    //Analizamos el codigo html
+    readHTML();
+  }
+  if (!pasoLibre || Lista_Errores_Sintaticos > 0) {
+    ErrorAnalisis("Existen errores");
+    console.log(Lista_Errores_Sintaticos);
     console.log(Lista_de_Errores);
-    //Empezamos con el analisis sintactico
-    if (Lista_de_Tokens.length > 0) {
-      parser();
-      if (Error_Sintactico_Permiso) {
-        //Creamos la tabla de variables
-        addTable();
-        //Obteneos la traduccion
-        var Console_ = ace.edit("console");
-        //Le asignamos lo leido
-        Console_.getSession().setValue(Codigo_Python);
-        //Creamos el archivo python
-        //Creamos el archivo html
-        file_python = new File([Codigo_Python], "Reporte_python.py", {
-          type: "text/plain;charset=utf-8",
-        });
-        //Analizamos el codigo html
-        readHTML();
-      } else {
-        ErrorAnalisis("Existen errores sintacticos");
-      }
-    }
-  } else {
-    ErrorAnalisis("Existen errores lexicos");
+    printErrores();
   }
 }
 
@@ -914,7 +912,6 @@ function analisis_Lexico(entrada) {
           estado = 0;
           lexema = "";
         } else {
-          console.log(c.charCodeAt(0));
           addError("Desconocido", lexema, fila, columna);
           estado = 0;
           lexema = "";
@@ -995,6 +992,15 @@ function parser() {
   Inicio();
 }
 
+function addErrorSintactico(esperado, encontrado, fila, columna) {
+  Lista_Errores_Sintaticos.push({
+    Esperado: esperado,
+    Encontrado: encontrado,
+    Fila: fila,
+    Columna: columna,
+  });
+}
+
 function Inicio() {
   //Inicio de un documento c#
   //Puede que vengan comentarios
@@ -1008,20 +1014,8 @@ function Inicio() {
   Declaracion_Cont();
 
   //Final de un documento c#
-  // si se encontro que venia una clase tiene que terminar de esta manera
-  if (tokenActual.Tipo === "Llave derecha") {
-    emparejar("Llave derecha");
-  } else {
-    console.log(
-      ">> Error sintactico se esperaba [ LLave Derecha ] en lugar de [" +
-        tokenActual.Tipo +
-        ", " +
-        tokenActual.Lexema +
-        ", " +
-        tokenActual.Fila +
-        "]"
-    );
-  }
+  emparejar("Llave derecha");
+
   ComentariosGlobales();
 }
 
@@ -1157,35 +1151,64 @@ function Ciclo_While() {
 
 //Variables para el for
 var for_var = "";
-var for_Range = [];
 var lenght_Var_For = 0;
 function Ciclo_For() {
   //<For> -> for ( <Declaracion> ; <Expresion> ;  Alter) { <Sentencias> }
   for (let j = 0; j < Contador_Tabs_Python; j++) {
     Codigo_Python += "  ";
   }
-  //Reiniciamos el rango
-  for_Range = [];
   Codigo_Python += "for ";
   emparejar("Reservada for");
   emparejar("Parentesis izquierdo");
+  valorVariable = "";
   Declaracion_Var();
   Codigo_Python = Codigo_Python.substring(
     0,
     Codigo_Python.length - lenght_Var_For
   );
-  Codigo_Python += for_var + " in range (";
-  Expresiones();
+  Codigo_Python += for_var + " in range (" + valorVariable;
+  valorVariable = "";
+  if (tokenActual.Lexema === for_var) {
+    emparejar("Identificador");
+    Simbolo_For();
+    Expresiones();
+  } else {
+    Expresiones();
+    Simbolo_For();
+    emparejar("Identificador");
+  }
   emparejar("Punto y coma");
   Alter_Ciclos();
   emparejar("Parentesis derecho");
   emparejar("Llave izquierda");
-  Codigo_Python += Number(for_Range[0]) + 1 + ", " + for_Range[1] + "):\n";
+  Codigo_Python += ", " + valorVariable + "):\n";
   Contador_Tabs_Python++;
   Sentencias();
   Break();
   emparejar("Llave derecha");
   Contador_Tabs_Python--;
+}
+
+function Simbolo_For() {
+  //Simbolo_For-> <
+  //   | >
+  //   | ==
+  //   | !=
+  //   | >=
+  //   | <=
+  if (tokenActual.Tipo === "Menor que") {
+    emparejar("Menor que");
+  } else if (tokenActual.Tipo === "Mayor que") {
+    emparejar("Mayor que");
+  } else if (tokenActual.Tipo === "Igual igual") {
+    emparejar("Igual igual");
+  } else if (tokenActual.Tipo === "Diferente de") {
+    emparejar("Diferente de");
+  } else if (tokenActual.Tipo === "Igual o mayor que") {
+    emparejar("Igual o mayor que");
+  } else {
+    emparejar("Igual o menor que");
+  }
 }
 
 function Alter_Ciclos() {
@@ -1221,11 +1244,12 @@ function Condicionales() {
 
 function Switch() {
   //<Switch> -> switch ( ID ) { <Cases> <Defaul> }
+  valorVariable = "";
   emparejar("Reservada switch");
   emparejar("Parentesis izquierdo");
-  Codigo_Python += "def switch (case, " + tokenActual.Lexema + "):\n";
   Contador_Tabs_Python++;
-  emparejar("Identificador");
+  Expresiones();
+  Codigo_Python += "def switch (case, " + valorVariable + "):\n";
   emparejar("Parentesis derecho");
   emparejar("Llave izquierda");
   for (let j = 0; j < Contador_Tabs_Python; j++) {
@@ -1247,14 +1271,15 @@ function Switch() {
 function Cases() {
   //<Cases> -> case numero : <CasesP>
   //        | Epsilon
+  valorVariable = "";
   if (tokenActual.Tipo === "Reservada case") {
     for (let j = 0; j < Contador_Tabs_Python; j++) {
       Codigo_Python += "  ";
     }
     emparejar("Reservada case");
-    Codigo_Python += tokenActual.Lexema + ":";
     aux_Default = tokenActual.Lexema;
-    emparejar("Numero");
+    Expresiones();
+    Codigo_Python += valorVariable + ":";
     emparejar("Dos puntos");
     CasesP();
   }
@@ -1270,8 +1295,10 @@ function CasesP() {
   } else {
     //Codigo del bloque del case (num) o de varios cases
     Sentencias();
-    emparejar("Reservada break");
-    emparejar("Punto y coma");
+    if (tokenActual.Tipo === "Reservada break") {
+      emparejar("Reservada break");
+      emparejar("Punto y coma");
+    }
     Codigo_Python = Codigo_Python.slice(0, -1);
     Codigo_Python += ", " + "\n";
     Cases();
@@ -1419,7 +1446,9 @@ function Lista_Declaracion() {
 }
 
 var cont_Var = 0;
+var express_ = "";
 function Declaracion_Var() {
+  express_ = "";
   //<Declaracion_Var> -> <Asignacion_de_tipo>_<Lista ID> <Opcion_de_Asignacion> PuntoyComa
   cont_Var = 0;
   if (
@@ -1468,11 +1497,24 @@ function Declaracion_Var() {
       }
     }
     Lista_ID();
+    express_ = for_var;
     if (
       cont_Var === 1 &&
       tokenActual.Tipo.match(/^(Disminucion|Incremento)$/)
     ) {
       Alter();
+      emparejar("Punto y coma");
+      for (let j = 0; j < Contador_Tabs_Python; j++) {
+        Codigo_Python += "  ";
+      }
+      Codigo_Python += express_ + "\n";
+    } else if (cont_Var === 1 && tokenActual.Tipo === "Parentesis izquierdo") {
+      IDP();
+      express_ += valorVariable + "\n";
+      for (let j = 0; j < Contador_Tabs_Python; j++) {
+        Codigo_Python += "  ";
+      }
+      Codigo_Python += express_;
       emparejar("Punto y coma");
     } else {
       Opcion_Asignacion();
@@ -1483,8 +1525,10 @@ function Declaracion_Var() {
 
 function Alter() {
   if (tokenActual.Tipo === "Disminucion") {
+    express_ += "--";
     emparejar("Disminucion");
   } else {
+    express_ += "++";
     emparejar("Incremento");
   }
 }
@@ -1575,14 +1619,11 @@ function Asignacion_de_Tipo() {
     //<Declaracion_Var> -> epsilon <Lista ID> <Opcion_de_Asignacion> PuntoyComa
     // Para esta producción de EP en epsilon (cadena vacía), simplemente no se hace nada.
     //Esto ya es un error
-    console.log(
-      ">> Error sintactico se esperaba [ Tipo de dato ] en lugar de [" +
-        tokenActual.Tipo +
-        ", " +
-        tokenActual.Lexema +
-        ", " +
-        tokenActual.Fila +
-        "]"
+    addErrorSintactico(
+      "Tipo de dato",
+      tokenActual.Tipo,
+      tokenActual.Fila,
+      tokenActual.Columna
     );
     errorSintactico = true;
   }
@@ -1744,9 +1785,6 @@ function F() {
 
   if (tokenActual.Tipo === "Numero") {
     valorVariable += tokenActual.Lexema;
-    if (esCiclo > 0) {
-      for_Range.push(tokenActual.Lexema);
-    }
     emparejar("Numero");
   } else if (tokenActual.Tipo === "Cadena") {
     valorVariable += tokenActual.Lexema;
@@ -1773,8 +1811,10 @@ function NotF() {
   //     | ID <IDP>
   //Comparamos si puede venir un not o si no
   if (tokenActual.Tipo === "Not") {
-    emparejar("Not");
-    valorVariable += " not ";
+    while (tokenActual.Tipo === "Not") {
+      emparejar("Not");
+      valorVariable += " not ";
+    }
   }
   //Despues los tipos de variables que pueden recibir el not
   if (tokenActual.Tipo === "Parentesis izquierdo") {
@@ -1960,36 +2000,27 @@ var errorSintactico = false;
 var Error_Sintactico_Permiso = true;
 
 function emparejar(tip) {
-  if (errorSintactico) {
-    Error_Sintactico_Permiso = false;
-    if (tokenActual.Tipo != "Ultimo") {
-      indice++;
-      tokenActual = Lista_de_Tokens[indice];
-      if (tokenActual.Tipo === "Punto y coma") {
+  if (tokenActual.Tipo != "Ultimo") {
+    if (errorSintactico) {
+      if (
+        tokenActual.Tipo === "Punto y coma" ||
+        tokenActual.Tipo === "Llave derecha"
+      ) {
         errorSintactico = false;
       }
-    }
-  } else {
-    if (tokenActual.Tipo != "Ultimo") {
-      if (tokenActual.Tipo === tip) {
-        indice++;
-        tokenActual = Lista_de_Tokens[indice];
-      } else {
-        console.log(
-          ">> Error sintactico se esperaba [" +
-            tip +
-            "] en lugar de [" +
-            tokenActual.Tipo +
-            ", " +
-            tokenActual.Lexema +
-            ", " +
-            tokenActual.Fila +
-            "]"
-        );
-        Error_Sintactico_Permiso = false;
+    } else {
+      if (tokenActual.Tipo != tip) {
         errorSintactico = true;
+        addErrorSintactico(
+          tip,
+          tokenActual.Tipo,
+          tokenActual.Fila,
+          tokenActual.Columna
+        );
       }
     }
+    indice++;
+    tokenActual = Lista_de_Tokens[indice];
   }
 }
 
@@ -2125,7 +2156,6 @@ function regexHtml(entrada) {
           estado = 0;
           i--;
         } else {
-          console.log("Etiqueta mala: " + lexema);
           estado = 0;
           lexema = "";
           i--;
@@ -2143,7 +2173,6 @@ function regexHtml(entrada) {
         break;
     }
   }
-  console.log(Lista_Etiquetas);
 }
 
 //Funcion style del div y body
@@ -2257,6 +2286,8 @@ function Style_Html() {
   }
 }
 
+//Funciones para los tag y los items del html y json
+//Funcion para el tag inicial html y el item cabecera
 function tag_start(tag) {
   for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
     Codigo_Html += "  ";
@@ -2268,6 +2299,7 @@ function tag_start(tag) {
   Cont_Tabs_Html++;
 }
 
+//Funcion para el tag final del html y cerrar el item cabecera
 function tag_final(tag) {
   Codigo_Json = Codigo_Json.substring(0, Codigo_Json.length - 2);
   Codigo_Json += "\n";
@@ -2281,6 +2313,7 @@ function tag_final(tag) {
   indice_html++;
 }
 
+//Funcion para el tag unitario en ciertos casos del html y los mismos items del json
 function tag_unit(tag) {
   for (let j = 0; j < Cont_Tabs_Html * 2; j++) {
     Codigo_Html += "  ";
@@ -2389,4 +2422,100 @@ function printTokens() {
   });
   //Abre el documento
   openFiles(file_tokens);
+}
+
+//Variable que sera el file de la lista de tokens
+var file_Errores;
+//Funcion para obtener la lista de tokens encontrados
+function printErrores() {
+  //Reiniciamos el doc
+  file_Errores = null;
+  //Creacion del html
+  var Lista_de_Errores_HTML =
+    "<html>" +
+    "<head>" +
+    "<meta charset='utf-8'>" +
+    "<title>\n" +
+    "		Reporte de Errores\n" +
+    "	</title>\n" +
+    '	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">\n' +
+    '<Script Language="JavaScript">\n' +
+    " function DameLaFechaHora() {\n" +
+    "var hora = new Date()\n" +
+    "var hrs = hora.getHours();\n" +
+    "var min = hora.getMinutes();\n" +
+    "var hoy = new Date();\n" +
+    "var m = new Array();\n" +
+    "var d = new Array()\n" +
+    "var an = hoy.getFullYear();\n" +
+    'm[0] = "Enero"; m[1] = "Febrero"; m[2] = "Marzo";\n' +
+    'm[3] = "Abril"; m[4] = "Mayo"; \n' +
+    'm[5] = "Junio";m[6] = "Julio"; m[7] = "Agosto"; m[8] = "Septiembre";\n' +
+    'm[9] = "Octubre"; m[10] = "Noviembre"; m[11] = "Diciembre";\n' +
+    'document.write(hrs + ":" + min + " (");\n' +
+    " document.write(hoy.getDate());\n" +
+    'document.write(" de ")\n;' +
+    "document.write(m[hoy.getMonth()])\n;" +
+    'document.write(" del " + an)\n; ' +
+    'document.write(")");\n' +
+    "}</Script>\n" +
+    "</head><body>\n" +
+    '<div class="shadow-lg p-3 mb-5 rounded bg-dark text-white">\n' +
+    "		<center><h1>Reporte de Errores \n" +
+    '  <small class="text-muted bg-white">Lista de Errores</small></h1> <script>DameLaFechaHora();</script> ' +
+    "</div>\n" +
+    '	<div class="container">\n' +
+    '		<table class="table table-hover table-light text-center">\n' +
+    ' 			 <thead class="thead-dark">   					 <tr>\n' +
+    '				      <th scope="col">    #   </th>\n' +
+    '				      <th scope="col">    Linea   </th>\n' +
+    '				      <th scope="col">    Columna    </th>\n' +
+    '				      <th scope="col" style="width: 250px">Tipo error</th>\n' +
+    '				      <th scope="col" style="width: 600px">         Descripcion         </th>\n' +
+    "				    </tr>\n" +
+    "				  </thead><tbody>";
+  /*
+   * Enlistado del vector de tokens encontrado en el analisis
+   */
+  for (let i = 0; i < Lista_de_Errores.length; i++) {
+    Lista_de_Errores_HTML =
+      Lista_de_Errores_HTML +
+      "<tr>\n" +
+      '				      <th scope="row">' +
+      (i + 1) +
+      "</th>\n" +
+      "				      <td>" +
+      Lista_de_Errores[i].Fila +
+      "</td>\n" +
+      "				      <td>" +
+      Lista_de_Errores[i].Columna +
+      "</td>\n" +
+      '				      <td style="width: 250px" >' +
+      "Léxico" +
+      "</td>\n" +
+      '				      <td style="width: 600px">' +
+      "El lexema '" +
+      Lista_de_Errores[i].Lexema +
+      "' no pertenece al lenguaje." +
+      "</td>\n" +
+      "				    </tr>";
+  }
+  /*
+   * Finalizacion del archivo HTML
+   */
+  Lista_de_Errores_HTML =
+    Lista_de_Errores_HTML +
+    "</tbody>\n" +
+    "				</table>\n" +
+    "\n" +
+    "			</div>\n" +
+    "		\n" +
+    "</body>\n" +
+    "</html>";
+
+  file_Errores = new File([Lista_de_Errores_HTML], "Lista_Tokens.html", {
+    type: "text/html;charset=utf-8",
+  });
+  //Abre el documento
+  openFiles(file_Errores);
 }
