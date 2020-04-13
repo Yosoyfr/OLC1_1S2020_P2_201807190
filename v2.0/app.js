@@ -100,6 +100,7 @@ function openFiles(file) {
 
 //Proceso de las creacion de ventanas
 var ctrl_Tabs = 2;
+
 function addWindow() {
   //Obtenemos la lista donde iran los items (tabs)
   let tabs = document.getElementById("myTabs");
@@ -617,7 +618,7 @@ function analisis_Lexico(entrada) {
         estado = 0;
         lexema = "";
         break;
-      //Sentencias de dobles simbolos
+        //Sentencias de dobles simbolos
       case 8:
         if (c === "+" && lexema.length < 2) {
           lexema += c;
@@ -721,7 +722,7 @@ function analisis_Lexico(entrada) {
           }
         }
         break;
-      //Comentarios
+        //Comentarios
       case 12:
         //omprueba que es un comentario
         if (c == "/" || c == "*") {
@@ -1029,6 +1030,7 @@ function Declaracion_Cont() {
 }
 
 var mainPerm = true;
+
 function Metodos() {
   if (tokenActual.Tipo === "Reservada void") {
     emparejar("Reservada void");
@@ -1053,6 +1055,7 @@ function Sentencias() {
 
 //Variable que sirve para saber que es un ciclo
 var esCiclo = 0;
+
 function Ciclos() {
   //<Ciclos> -> <For>
   //         | <While>
@@ -1152,6 +1155,7 @@ function Ciclo_While() {
 //Variables para el for
 var for_var = "";
 var lenght_Var_For = 0;
+
 function Ciclo_For() {
   //<For> -> for ( <Declaracion> ; <Expresion> ;  Alter) { <Sentencias> }
   for (let j = 0; j < Contador_Tabs_Python; j++) {
@@ -1287,6 +1291,7 @@ function Cases() {
 
 //Variable auxiliar del default
 var aux_Default = 0;
+
 function CasesP() {
   //<Cases> -> <Cases>
   //        | <Sentencias> break ;
@@ -1447,6 +1452,7 @@ function Lista_Declaracion() {
 
 var cont_Var = 0;
 var express_ = "";
+
 function Declaracion_Var() {
   express_ = "";
   //<Declaracion_Var> -> <Asignacion_de_tipo>_<Lista ID> <Opcion_de_Asignacion> PuntoyComa
@@ -1588,6 +1594,7 @@ var Lista_Var_Python = [];
 
 //Var si fue declarado
 var str_Var = "";
+
 function Asignacion_de_Tipo() {
   str_Var = "var ";
   if (tokenActual.Tipo === "Reservada int") {
@@ -1677,6 +1684,7 @@ function Expresiones() {
   T();
   EP();
 }
+
 function EP() {
   //EP-> + T EP
   //   | - T EP
@@ -2038,6 +2046,7 @@ var html_print = "";
 //Variables de archivos
 var file_html;
 var file_json;
+
 function readHTML() {
   //Test
   var html_ =
@@ -2100,6 +2109,7 @@ function downloadJson() {
 
 //Nuevo analisis de cadena html
 var Lista_Etiquetas = [];
+
 function regexHtml(entrada) {
   //Inicializamos las listas
   Lista_Etiquetas = [];
@@ -2199,8 +2209,8 @@ function localizeStyle(style) {
       lexema = "";
     } else if (
       lexema
-        .substring(0, lexema.length)
-        .match(/^(yellow|green|blue|red|white|skyblue)$/)
+      .substring(0, lexema.length)
+      .match(/^(yellow|green|blue|red|white|skyblue)$/)
     ) {
       addEtiqueta("color", lexema);
       i--;
@@ -2232,6 +2242,7 @@ function existTag() {
 
 //Erores en el html
 var Lista_Errores_Etiquetas = [];
+
 function erroresEtiquetas(tag) {
   Lista_Errores_Etiquetas.push({
     Error: "La etiqueta " + tag + " no esta en las permitidas",
@@ -2475,7 +2486,7 @@ function printErrores() {
     "				    </tr>\n" +
     "				  </thead><tbody>";
   /*
-   * Enlistado del vector de tokens encontrado en el analisis
+   * Enlistado del vector de errores lexicos encontrado en el analisis
    */
   for (let i = 0; i < Lista_de_Errores.length; i++) {
     Lista_de_Errores_HTML =
@@ -2497,6 +2508,34 @@ function printErrores() {
       "El lexema '" +
       Lista_de_Errores[i].Lexema +
       "' no pertenece al lenguaje." +
+      "</td>\n" +
+      "				    </tr>";
+  }
+  /*
+   * Enlistado del vector de errores sintacticos encontrado en el analisis
+   */
+  for (let i = 0; i < Lista_Errores_Sintaticos.length; i++) {
+    Lista_de_Errores_HTML =
+      Lista_de_Errores_HTML +
+      "<tr>\n" +
+      '				      <th scope="row">' +
+      (i + 1) +
+      "</th>\n" +
+      "				      <td>" +
+      Lista_Errores_Sintaticos[i].Fila +
+      "</td>\n" +
+      "				      <td>" +
+      Lista_Errores_Sintaticos[i].Columna +
+      "</td>\n" +
+      '				      <td style="width: 250px" >' +
+      "Sintáctico" +
+      "</td>\n" +
+      '				      <td style="width: 600px">' +
+      "Se esperaba '" +
+      Lista_Errores_Sintaticos[i].Esperado +
+      "', (Se encontro" +
+      Lista_Errores_Sintaticos[i].Encontrado +
+      ")." +
       "</td>\n" +
       "				    </tr>";
   }
