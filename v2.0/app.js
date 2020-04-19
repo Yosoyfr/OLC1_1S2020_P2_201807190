@@ -618,7 +618,7 @@ function analisis_Lexico(entrada) {
         estado = 0;
         lexema = "";
         break;
-        //Sentencias de dobles simbolos
+      //Sentencias de dobles simbolos
       case 8:
         if (c === "+" && lexema.length < 2) {
           lexema += c;
@@ -722,7 +722,7 @@ function analisis_Lexico(entrada) {
           }
         }
         break;
-        //Comentarios
+      //Comentarios
       case 12:
         //omprueba que es un comentario
         if (c == "/" || c == "*") {
@@ -2013,14 +2013,16 @@ var Error_Sintactico_Permiso = true;
 
 function emparejar(tip) {
   if (tokenActual.Tipo != "Ultimo") {
-
     if (errorSintactico) {
       Error_Sintactico_Permiso = false;
       if (tokenActual.Tipo != "Ultimo") {
-        console.log(tokenActual)
+        console.log(tokenActual);
         indice++;
         tokenActual = Lista_de_Tokens[indice];
-        if (tokenActual.Tipo === "Punto y coma" || tokenActual.Tipo === "Llave derecha") {
+        if (
+          tokenActual.Tipo === "Punto y coma" ||
+          tokenActual.Tipo === "Llave derecha"
+        ) {
           errorSintactico = false;
         }
       }
@@ -2243,8 +2245,8 @@ function localizeStyle(style) {
       lexema = "";
     } else if (
       lexema
-      .substring(0, lexema.length)
-      .match(/^(yellow|green|blue|red|white|skyblue)$/)
+        .substring(0, lexema.length)
+        .match(/^(yellow|green|blue|red|white|skyblue)$/)
     ) {
       addEtiqueta("color", lexema);
       i--;

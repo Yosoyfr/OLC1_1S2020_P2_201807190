@@ -31,7 +31,7 @@
               <!--Opciones del menu-->
               <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
                 <label for="file-input" class="dropdown-item">Abrir <i class="fas fa-file-upload fa-lg"></i></label>
-                <input type="file" id="file-input" style='display: none;' accept=".cs">
+                <input type="file" id="file-input" style="display: none;" accept=".cs" />
                 <a class="dropdown-item" href="#" onclick="saveFiles()" id="save-file">Guardar <i
                     class="fas fa-file-download fa-lg"></i></a>
                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modal-save">Guardar como... <i
@@ -51,27 +51,27 @@
                 aria-haspopup="true" aria-expanded="false"></button>
               <!--Opciones del menu-->
               <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                <a class="dropdown-item" href="#" onclick="openPython()">Archivo.py
-                  <i class="fab fa-python fa-lg"></i></a>
-                <a class="dropdown-item" href="#" onclick="openHtml()">Archivo.html
-                  <i class="fab fa-html5 fa-lg"></i></a>
-                <a class="dropdown-item" href="#" onclick="openJson()">Archivo.json
-                  <i class="fab fa-node-js fa-lg""></i></a>
-                <a class=" dropdown-item" href="#" onclick="downloadPython()">Download Python
-                    <i class="fab fa-python fa-lg"></i></a>
-                <a class="dropdown-item" href="#" onclick="downloadHtml()">Download HTML
-                  <i class="fab fa-html5 fa-lg"></i></a>
-                <a class="dropdown-item" href="#" onclick="downloadJson()">Download JSON
-                  <i class="fab fa-node-js fa-lg""></i></a>
+                <a class="dropdown-item" href="#" onclick="openPython()">Archivo.py <i
+                    class="fab fa-python fa-lg"></i></a>
+                <a class="dropdown-item" href="#" onclick="openHtml()">Archivo.html <i
+                    class="fab fa-html5 fa-lg"></i></a>
+                <a class="dropdown-item" href="#" onclick="openJson()">Archivo.json <i
+                    class="fab fa-node-js fa-lg"></i></a>
+                <a class="dropdown-item" href="#" onclick="downloadPython()">Download Python <i
+                    class="fab fa-python fa-lg"></i></a>
+                <a class="dropdown-item" href="#" onclick="downloadHtml()">Download HTML <i
+                    class="fab fa-html5 fa-lg"></i></a>
+                <a class="dropdown-item" href="#" onclick="downloadJson()">Download JSON <i
+                    class="fab fa-node-js fa-lg"></i></a>
               </div>
             </div>
           </div>
         </li>
-        <li class=" nav-item">
-                    <a class="nav-link" href="#" id="btn-analizar" onclick="run()">Run <i
-                        class="fas fa-play-circle fa-lg"></i></a>
+        <li class="nav-item">
+          <a class="nav-link" href="#" id="btn-analizar" onclick="run()">Run <i
+              class="fas fa-play-circle fa-lg"></i></a>
         </li>
-        <li class=" nav-item">
+        <li class="nav-item">
           <a class="nav-link" href="#" id="btn-analizar" onclick="printTokens()">Tokens <i
               class="fab fa-typo3 fa-lg"></i></a>
         </li>
@@ -104,7 +104,7 @@
       <!--Consola-->
       <div class="col-md-6">
         <div class="card text-white bg-secondary border-primary mb-2">
-          <div class="card-header bg-primary ">Console: Python</div>
+          <div class="card-header bg-primary">Console: Python</div>
           <div class="card-body">
             <div class="list-group" id="console" style="height: 280px; position: relative;"></div>
           </div>
@@ -134,8 +134,7 @@
                 <th scope="col">Linea</th>
               </tr>
             </thead>
-            <tbody id="table_var">
-            </tbody>
+            <tbody id="table_var"></tbody>
           </table>
         </div>
       </div>
@@ -160,7 +159,6 @@
         </div>
       </div>
     </div>
-
   </div>
 
   <!--Modal about-->
@@ -185,7 +183,9 @@
           </p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal">
+            Close
+          </button>
         </div>
       </div>
     </div>
@@ -221,12 +221,16 @@
         <div class="modal-body">
           <div class="form-group">
             <label class="col-form-label" for="nombre-file">Escriba el nombre del archivo con su extension:</label>
-            <input type="text" class="form-control" value="text.cs" id="nombre-file">
+            <input type="text" class="form-control" value="text.cs" id="nombre-file" />
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" onclick="SaveAs()">Save changes</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="SaveAs()">
+            Save changes
+          </button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            Close
+          </button>
         </div>
       </div>
     </div>
@@ -260,14 +264,14 @@
 
   <script src="app.js"></script>
   <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous">
-  </script>
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
-  </script>
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
-    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous">
-  </script>
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"></script>
 </body>
 
 </html>
