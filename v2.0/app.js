@@ -225,7 +225,7 @@ function run() {
     //Analizamos el codigo html
     readHTML();
   }
-  if (!pasoLibre || Lista_Errores_Sintaticos > 0) {
+  if (!pasoLibre || Lista_Errores_Sintaticos.length > 0) {
     ErrorAnalisis("Existen errores");
     console.log(Lista_Errores_Sintaticos);
     console.log(Lista_de_Errores);
@@ -986,6 +986,7 @@ function parser() {
   tokenActual = Lista_de_Tokens[indice];
   errorSintactico = false;
   Error_Sintactico_Permiso = true;
+  isVoid = false;
   //Codigo traducido python
   Contador_Tabs_Python = 0;
   Codigo_Python = "";
@@ -1317,8 +1318,7 @@ function Default() {
     for (let j = 0; j < Contador_Tabs_Python; j++) {
       Codigo_Python += "  ";
     }
-    let aux_number = Number(aux_Default) + 1;
-    Codigo_Python += aux_number + ":";
+    Codigo_Python += "default" + ":";
     emparejar("Reservada default");
     emparejar("Dos puntos");
     //Codigo del bloque del default
@@ -1904,7 +1904,10 @@ function Main() {
   Codigo_Python += "  main()\n\n";
 }
 
+var isVoid = false;
+
 function Metodo_Void() {
+  isVoid = true;
   Codigo_Python += tokenActual.Lexema + " (";
   emparejar("Identificador");
   emparejar("Parentesis izquierdo");
@@ -1926,6 +1929,7 @@ function Metodo_Void() {
   emparejar("Llave derecha");
   Contador_Tabs_Python--;
   Codigo_Python += "\n";
+  isVoid = false;
 }
 
 function Comentarios() {
@@ -2009,6 +2013,34 @@ var Error_Sintactico_Permiso = true;
 
 function emparejar(tip) {
   if (tokenActual.Tipo != "Ultimo") {
+
+    if (errorSintactico) {
+      Error_Sintactico_Permiso = false;
+      if (tokenActual.Tipo != "Ultimo") {
+        console.log(tokenActual)
+        indice++;
+        tokenActual = Lista_de_Tokens[indice];
+        if (tokenActual.Tipo === "Punto y coma" || tokenActual.Tipo === "Llave derecha") {
+          errorSintactico = false;
+        }
+      }
+    } else {
+      if (tokenActual.Tipo != "Ultimo") {
+        if (tokenActual.Tipo === tip) {
+          indice++;
+          tokenActual = Lista_de_Tokens[indice];
+        } else {
+          addErrorSintactico(
+            tip,
+            tokenActual.Tipo,
+            tokenActual.Fila,
+            tokenActual.Columna
+          );
+          errorSintactico = true;
+        }
+      }
+    }
+    /*
     if (errorSintactico) {
       if (
         tokenActual.Tipo === "Punto y coma" ||
@@ -2027,8 +2059,10 @@ function emparejar(tip) {
         );
       }
     }
+    
     indice++;
     tokenActual = Lista_de_Tokens[indice];
+    */
   }
 }
 
