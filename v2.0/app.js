@@ -1119,7 +1119,13 @@ function Ciclo_Do_While() {
   emparejar("Reservada do");
   emparejar("Llave izquierda");
   Sentencias();
-  Break();
+  if (tokenActual.Tipo === "Reservada return") {
+    Return();
+  } else if (tokenActual.Tipo === "Reservada break" && esCiclo > 0) {
+    Break();
+  } else if (tokenActual.Tipo === "Reservada continue" && esCiclo > 0) {
+    Continue();
+  }
   emparejar("Llave derecha");
   emparejar("Reservada while");
   emparejar("Parentesis izquierdo");
@@ -1153,7 +1159,13 @@ function Ciclo_While() {
   emparejar("Parentesis derecho");
   emparejar("Llave izquierda");
   Sentencias();
-  Break();
+  if (tokenActual.Tipo === "Reservada return") {
+    Return();
+  } else if (tokenActual.Tipo === "Reservada break" && esCiclo > 0) {
+    Break();
+  } else if (tokenActual.Tipo === "Reservada continue" && esCiclo > 0) {
+    Continue();
+  }
   emparejar("Llave derecha");
   Contador_Tabs_Python--;
 }
@@ -1194,7 +1206,13 @@ function Ciclo_For() {
   emparejar("Llave izquierda");
   Contador_Tabs_Python++;
   Sentencias();
-  Break();
+  if (tokenActual.Tipo === "Reservada return") {
+    Return();
+  } else if (tokenActual.Tipo === "Reservada break" && esCiclo > 0) {
+    Break();
+  } else if (tokenActual.Tipo === "Reservada continue" && esCiclo > 0) {
+    Continue();
+  }
   emparejar("Llave derecha");
   Contador_Tabs_Python--;
 }
@@ -1918,6 +1936,10 @@ function Main() {
   emparejar("Parentesis derecho");
   emparejar("Llave izquierda");
   Sentencias();
+  //Por si viene el return
+  if (tokenActual.Tipo === "Reservada return") {
+    Return();
+  }
   emparejar("Llave derecha");
   Contador_Tabs_Python--;
   Codigo_Python += "\nif __name__ = “__main__”:\n";
@@ -1944,8 +1966,7 @@ function Metodo_Void() {
   Sentencias();
   //Por si viene el return
   if (tokenActual.Tipo === "Reservada return") {
-    emparejar("Reservada return");
-    emparejar("Punto y coma");
+    Return();
   }
   emparejar("Llave derecha");
   Contador_Tabs_Python--;
