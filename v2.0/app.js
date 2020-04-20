@@ -198,6 +198,7 @@ function run() {
   file_json = null;
   html_print = "";
   pasoLibre = true;
+  entryMethod = false;
   //Obtenemos la tabla
   let table = document.getElementById("table_var");
   //Limpiamos la tabla
@@ -1023,6 +1024,7 @@ function Inicio() {
 
 //<Declaracion_Cont>:= <Metodos> <Declaracion_Cont>
 //                  | <Declaracion_Var>
+var entryMethod = false;
 function Declaracion_Cont() {
   Lista_Declaracion();
   //Codigo_Python += "\n";
@@ -1034,13 +1036,16 @@ var mainPerm = true;
 
 function Metodos() {
   if (tokenActual.Tipo === "Reservada void") {
+    entryMethod = true;
     emparejar("Reservada void");
     Codigo_Python += "def ";
     if (mainPerm && tokenActual.Tipo === "Reservada main") {
       Main();
+      entryMethod = false;
       Declaracion_Cont();
     } else {
       Metodo_Void();
+      entryMethod = false;
       Declaracion_Cont();
     }
   }
@@ -1183,10 +1188,10 @@ function Ciclo_For() {
     emparejar("Identificador");
   }
   emparejar("Punto y coma");
+  Codigo_Python += ", " + valorVariable;
   Alter_Ciclos();
   emparejar("Parentesis derecho");
   emparejar("Llave izquierda");
-  Codigo_Python += ", " + valorVariable + "):\n";
   Contador_Tabs_Python++;
   Sentencias();
   Break();
@@ -1220,8 +1225,10 @@ function Alter_Ciclos() {
   emparejar("Identificador");
   if (tokenActual.Tipo === "Disminucion") {
     emparejar("Disminucion");
+    Codigo_Python += ", -1):\n";
   } else {
     emparejar("Incremento");
+    Codigo_Python += "):\n";
   }
 }
 
@@ -1304,6 +1311,8 @@ function CasesP() {
     if (tokenActual.Tipo === "Reservada break") {
       emparejar("Reservada break");
       emparejar("Punto y coma");
+    } else if (tokenActual.Tipo === "Reservada return") {
+      Return();
     }
     Codigo_Python = Codigo_Python.slice(0, -1);
     Codigo_Python += ", " + "\n";
@@ -1323,8 +1332,12 @@ function Default() {
     emparejar("Dos puntos");
     //Codigo del bloque del default
     Sentencias();
-    emparejar("Reservada break");
-    emparejar("Punto y coma");
+    if (tokenActual.Tipo === "Reservada break") {
+      emparejar("Reservada break");
+      emparejar("Punto y coma");
+    } else if (tokenActual.Tipo === "Reservada return") {
+      Return();
+    }
     Codigo_Python = Codigo_Python.slice(0, -1);
     Codigo_Python += ", " + "\n";
   }
@@ -1399,7 +1412,7 @@ function Return() {
     Codigo_Python += "  ";
   }
   emparejar("Reservada return");
-  if (tokenActual.Tipo != "Punto y coma") {
+  if (!isVoid) {
     Expresiones();
     Codigo_Python += "return " + valorVariable + "\n";
     emparejar("Punto y coma");
@@ -1465,7 +1478,12 @@ function Declaracion_Var() {
     Asignacion_de_Tipo();
     Lista_ID();
     //Esto es por si puede ser una funcion
-    if (cont_Var === 1 && tokenActual.Tipo === "Parentesis izquierdo") {
+    if (
+      cont_Var === 1 &&
+      tokenActual.Tipo === "Parentesis izquierdo" &&
+      !entryMethod
+    ) {
+      entryMethod = true;
       emparejar("Parentesis izquierdo");
       //Aqui esta la traduccion para funciones
       //-------------------------------------------------
@@ -1490,6 +1508,7 @@ function Declaracion_Var() {
       emparejar("Llave derecha");
       Contador_Tabs_Python--;
       Codigo_Python += "\n";
+      entryMethod = false;
     } else {
       Opcion_Asignacion();
       emparejar("Punto y coma");
@@ -1891,6 +1910,7 @@ function Parametros() {
 
 //Metodo Main
 function Main() {
+  isVoid = true;
   Codigo_Python += "main ():\n";
   Contador_Tabs_Python++;
   emparejar("Reservada main");
@@ -1902,6 +1922,7 @@ function Main() {
   Contador_Tabs_Python--;
   Codigo_Python += "\nif __name__ = “__main__”:\n";
   Codigo_Python += "  main()\n\n";
+  isVoid = false;
 }
 
 var isVoid = false;
@@ -2182,7 +2203,8 @@ function regexHtml(entrada) {
           let aux_Lexema = lexema
             .replace("<", "")
             .replace(">", "")
-            .replace("/", "_");
+            .replace("/", "_")
+            .toLowerCase();
           if (aux_Lexema.substring(0, 5) === "body ") {
             addEtiqueta("body", lexema);
             localizeStyle(aux_Lexema.substring(5, aux_Lexema.length));
@@ -2274,6 +2296,7 @@ function existTag() {
     }
   });
   console.log(Lista_Errores_Etiquetas);
+  console.log(Lista_Etiquetas);
 }
 
 //Erores en el html
@@ -2569,7 +2592,7 @@ function printErrores() {
       '				      <td style="width: 600px">' +
       "Se esperaba '" +
       Lista_Errores_Sintaticos[i].Esperado +
-      "', (Se encontro" +
+      "', (Se encontro " +
       Lista_Errores_Sintaticos[i].Encontrado +
       ")." +
       "</td>\n" +
