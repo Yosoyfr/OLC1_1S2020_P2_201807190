@@ -1516,13 +1516,15 @@ function Declaracion_Var() {
       Codigo_Python += "):" + "\n";
       emparejar("Llave izquierda");
       Sentencias();
-      emparejar("Reservada return");
-      Expresiones();
-      for (let j = 0; j < Contador_Tabs_Python; j++) {
-        Codigo_Python += "  ";
+      if (tokenActual.Tipo === "Reservada return") {
+        emparejar("Reservada return");
+        Expresiones();
+        for (let j = 0; j < Contador_Tabs_Python; j++) {
+          Codigo_Python += "  ";
+        }
+        Codigo_Python += "return " + valorVariable + "\n";
+        emparejar("Punto y coma");
       }
-      Codigo_Python += "return " + valorVariable + "\n";
-      emparejar("Punto y coma");
       emparejar("Llave derecha");
       Contador_Tabs_Python--;
       Codigo_Python += "\n";
